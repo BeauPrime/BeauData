@@ -47,6 +47,8 @@ namespace BeauData
                 Rect originalRect = position;
                 Rect indentedRect = EditorGUI.IndentedRect(originalRect);
 
+                label = EditorGUI.BeginProperty(originalRect, label, property);
+
                 originalRect.width = EditorGUIUtility.labelWidth;
                 indentedRect.x = originalRect.xMax;
                 indentedRect.width = position.xMax - indentedRect.xMin;
@@ -76,6 +78,8 @@ namespace BeauData
                     ValueDisplay(valueRect, valueProp);
                 }
                 EditorGUI.indentLevel = prevIndent;
+
+                EditorGUI.EndProperty();
             }
 
             #region Displays
