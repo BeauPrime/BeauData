@@ -44,23 +44,29 @@ namespace BeauData
 
                 SerializedProperty valueProp = property.FindPropertyRelative("m_Value");
 
-                Rect originalRect = position;
-                Rect indentedRect = EditorGUI.IndentedRect(originalRect);
+                Rect labelRect = position;
+                Rect indentedRect = EditorGUI.IndentedRect(labelRect);
 
-                label = EditorGUI.BeginProperty(originalRect, label, property);
+                label = EditorGUI.BeginProperty(labelRect, label, property);
 
-                originalRect.width = EditorGUIUtility.labelWidth;
-                indentedRect.x = originalRect.xMax;
-                indentedRect.width = position.xMax - indentedRect.xMin;
-
-                EditorGUI.LabelField(originalRect, label);
+                if (!string.IsNullOrEmpty(label.text))
+                {
+                    labelRect.width = EditorGUIUtility.labelWidth;
+                    indentedRect.x = labelRect.xMax;
+                    indentedRect.width = position.xMax - indentedRect.xMin;
+                    EditorGUI.LabelField(labelRect, label);
+                }
 
                 int prevIndent = EditorGUI.indentLevel;
                 {
                     EditorGUI.indentLevel = 0;
 
                     Rect fieldRect = indentedRect;
-                    fieldRect.width -= VALUE_WIDTH;
+
+                    if (selector.ShowDebug)
+                    {
+                        fieldRect.width -= VALUE_WIDTH;
+                    }
 
                     if (list != null)
                     {
@@ -71,11 +77,14 @@ namespace BeauData
                         StringInput(fieldRect, valueProp);
                     }
 
-                    Rect valueRect = indentedRect;
-                    valueRect.x += valueRect.width - VALUE_WIDTH;
-                    valueRect.width = VALUE_WIDTH;
+                    if (selector.ShowDebug)
+                    {
+                        Rect valueRect = indentedRect;
+                        valueRect.x += valueRect.width - VALUE_WIDTH;
+                        valueRect.width = VALUE_WIDTH;
 
-                    ValueDisplay(valueRect, valueProp);
+                        ValueDisplay(valueRect, valueProp);
+                    }
                 }
                 EditorGUI.indentLevel = prevIndent;
 
@@ -183,7 +192,7 @@ namespace BeauData
                 List<Registry> registries = new List<Registry>();
                 foreach (var type in inSelector.Types)
                 {
-                    Registry r = GetRegistry(type, false);
+                    Registry r = GetRegistry(type, false, true);
                     if (r != null)
                         registries.Add(r);
                 }
@@ -247,6 +256,7 @@ namespace BeauData
         #if UNITY_EDITOR
 
         internal readonly Type[] Types;
+        internal bool ShowDebug { get; set; }
 
         internal Type GetCachingType()
         {
@@ -259,6 +269,15 @@ namespace BeauData
         {
             #if UNITY_EDITOR
             Types = new Type[] { inType };
+            ShowDebug = false;
+            #endif // UNITY_EDITOR
+        }
+
+        public FourCCSelectorAttribute(bool inbShowDebug, Type inType)
+        {
+            #if UNITY_EDITOR
+            Types = new Type[] { inType };
+            ShowDebug = inbShowDebug;
             #endif // UNITY_EDITOR
         }
 
@@ -268,6 +287,17 @@ namespace BeauData
             Types = new Type[1 + inTypes.Length];
             Types[0] = inFirstType;
             Array.Copy(inTypes, 0, Types, 1, inTypes.Length);
+            ShowDebug = false;
+            #endif // UNITY_EDITOR
+        }
+
+        public FourCCSelectorAttribute(bool inbShowDebug, Type inFirstType, params Type[] inTypes)
+        {
+            #if UNITY_EDITOR
+            Types = new Type[1 + inTypes.Length];
+            Types[0] = inFirstType;
+            Array.Copy(inTypes, 0, Types, 1, inTypes.Length);
+            ShowDebug = inbShowDebug;
             #endif // UNITY_EDITOR
         }
 

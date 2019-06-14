@@ -28,15 +28,16 @@ namespace BeauData
         static public FourCC Register(Type inType, string inCode, string inName = null, string inDescription = null)
         {
             FourCC code = FourCC.Parse(inCode);
-            GetRegistry(inType, true).AddEntry(code, inName, inDescription);
+            GetRegistry(inType, true, false).AddEntry(code, inName, inDescription);
             return code;
         }
 
         static private Dictionary<IntPtr, Registry> s_Registry = new Dictionary<IntPtr, Registry>();
 
-        static private Registry GetRegistry(Type inType, bool inbCreate)
+        static private Registry GetRegistry(Type inType, bool inbCreate, bool inbScan)
         {
-            ScanForRegistry();
+            if (inbScan)
+                ScanForRegistry();
 
             Registry registry;
             if (!s_Registry.TryGetValue(inType.TypeHandle.Value, out registry) && inbCreate)
