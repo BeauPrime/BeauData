@@ -37,9 +37,11 @@ namespace BeauData
                 CachedSelectionList list = null;
 
                 FourCCSelectorAttribute selector = this.attribute as FourCCSelectorAttribute;
+                bool bShowDebug = true;
                 if (selector != null)
                 {
                     list = GetList(selector);
+                    bShowDebug = selector.ShowDebug;
                 }
 
                 SerializedProperty valueProp = property.FindPropertyRelative("m_Value");
@@ -63,7 +65,7 @@ namespace BeauData
 
                     Rect fieldRect = indentedRect;
 
-                    if (selector.ShowDebug)
+                    if (bShowDebug)
                     {
                         fieldRect.width -= VALUE_WIDTH;
                     }
@@ -77,7 +79,7 @@ namespace BeauData
                         StringInput(fieldRect, valueProp);
                     }
 
-                    if (selector.ShowDebug)
+                    if (bShowDebug)
                     {
                         Rect valueRect = indentedRect;
                         valueRect.x += valueRect.width - VALUE_WIDTH;
