@@ -14,7 +14,7 @@ namespace BeauData
             ioSerializer.Serialize("y", ref y, FieldOptions.PreferAttribute);
             ioSerializer.Serialize("z", ref z, FieldOptions.PreferAttribute);
 
-            if (ioSerializer.IsWriting)
+            if (ioSerializer.IsReading)
             {
                 ioData.x = x;
                 ioData.y = y;

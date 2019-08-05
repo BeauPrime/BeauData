@@ -13,7 +13,7 @@ namespace BeauData
             ioSerializer.Serialize("min", ref min, FieldOptions.PreferAttribute);
             ioSerializer.Serialize("max", ref max, FieldOptions.PreferAttribute);
 
-            if (ioSerializer.IsWriting)
+            if (ioSerializer.IsReading)
             {
                 ioData.SetMinMax(min, max);
             }
