@@ -169,7 +169,7 @@ The following types are able to be serialized.
 | ``UInt16`` | Value | ``Serialize`` | ✓ | ✓ | |
 | ``UInt32`` | Value | ``Serialize`` | ✓ | ✓ | |
 | ``UInt64`` | Value | ``Serialize`` | ✓ | ✓ | |
-| ``Enum`` | Enum | ``Enum`` | ✓ | ✓ |Must be backed by an Int32 or smaller (C# enums are this by default) |
+| ``Enum`` | Enum | ``Enum`` | ✓ | ✓ | Binary formats respect the enum's backing type (i.e. an Int32 enum is written as Int32, a Byte enum is written as Byte, etc.). Changing an enum's backing type will cause issues when reading binary formats. |
 | ``BeauData.FourCC`` | Value | ``Serialize`` | ✓ | ✓ | |
 | ``BeauData.ISerializedObject`` | Object | ``Object`` | X | X | |
 | ``UnityEngine.Bounds`` | Value | ``Serialize`` | ✓ | X | | 
