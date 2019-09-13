@@ -6,7 +6,6 @@
  * File:    BinarySerializer.cs
  * Purpose: Serializes to an XML format.
  */
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -77,6 +76,12 @@ namespace BeauData.Format
         {
             m_Stack.Clear();
             m_Current = m_Root = (XmlElement) m_Document.DocumentElement;
+
+            XmlAttribute versionAttribute = m_Current.Attributes[SERIALIZER_VERSION_KEY];
+            if (versionAttribute != null)
+                SerializerVersion = ushort.Parse(versionAttribute.InnerText);
+            else
+                SerializerVersion = VERSION_INITIAL;
         }
 
         protected override void BeginWriteRoot(string inRootName)
@@ -84,6 +89,9 @@ namespace BeauData.Format
             m_Stack.Clear();
             m_Current = m_Root = m_Document.CreateElement(SanitizeElementName(inRootName));
             m_Document.AppendChild(m_Root);
+
+            XmlAttribute serializerVersionNode = m_Document.CreateAttribute(SERIALIZER_VERSION_KEY);
+            serializerVersionNode.InnerText = SerializerVersion.ToString();
         }
 
         protected override void EndRoot()

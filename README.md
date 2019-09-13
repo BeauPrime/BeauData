@@ -1,7 +1,7 @@
 # BeauData
 
-**Current Version: 0.1.0**  
-Updated 5 April 2019 | Changelog (Not yet available)
+**Current Version: 0.2.0**  
+Updated 13 September 2019 | Changelog (Not yet available)
 
 ## About
 BeauData is an object serialization and deserialization library, intended to reduce the amount of custom logic necessary to save and load objects. It supports the basic object versioning, serialization and deserialization of subclasses, and type aliasing. It can read and write to XML, JSON, binary, and gzipped binary.

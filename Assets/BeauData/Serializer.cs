@@ -6,7 +6,6 @@
  * File:    Serializer.cs
  * Purpose: Base class for serialization interface.
  */
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +15,12 @@ namespace BeauData
 {
     public abstract partial class Serializer : IDisposable
     {
+        protected const string SERIALIZER_VERSION_KEY = "__serializerVersion";
+        protected const ushort VERSION_INITIAL = 1;
+        protected const ushort VERSION_ENUM_COMPRESSION = 2;
+
+        protected const ushort VERSION_MOSTRECENT = VERSION_ENUM_COMPRESSION;
+
         private const string MAP_KEY = "key";
         private const string MAP_VALUE = "value";
 
@@ -26,6 +31,11 @@ namespace BeauData
 
         public bool IsReading { get; private set; }
         public bool IsWriting { get { return !IsReading; } }
+
+        /// <summary>
+        /// Serializer version.
+        /// </summary>
+        protected ushort SerializerVersion { get; set; }
 
         /// <summary>
         /// Version number for the currently serializing ISerializedObject.
@@ -747,6 +757,8 @@ namespace BeauData
         private void Write<T>(ref T ioObject) where T : ISerializedObject
         {
             IsReading = false;
+
+            SerializerVersion = VERSION_MOSTRECENT;
 
             BeginWriteRoot(typeof(T).FullName);
             Write_Object<T>(ref ioObject);

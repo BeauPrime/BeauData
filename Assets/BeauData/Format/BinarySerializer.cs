@@ -6,7 +6,6 @@
  * File:    BinarySerializer.cs
  * Purpose: Serializes to a binary format.
  */
-
 using System;
 using System.IO;
 
@@ -322,11 +321,20 @@ namespace BeauData.Format
                 m_Stream.Seek(4, SeekOrigin.Begin);
                 ReadNextFrame();
             }
+
+            if (m_Current.Type == FieldType.UINT16)
+            {
+                SerializerVersion = (ushort) m_Current.Value;
+                ReadNextFrame();
+            }
         }
 
         protected override void BeginWriteRoot(string inRootName)
         {
             m_Writer = new BinaryWriter(m_Stream);
+
+            ushort currentVersion = SerializerVersion;
+            Write_UInt16(ref currentVersion);
 
             BeginWriteObject();
         }

@@ -10,7 +10,6 @@
 #if UNITY_EDITOR
 #define ALLOW_REGISTRY
 #endif // UNITY_EDITOR
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -28,8 +27,17 @@ namespace BeauData
         static public FourCC Register(Type inType, string inCode, string inName = null, string inDescription = null)
         {
             FourCC code = FourCC.Parse(inCode);
-            GetRegistry(inType, true, false).AddEntry(code, inName, inDescription);
-            return code;
+            return Register(inType, code, inName, inDescription);
+        }
+
+        /// <summary>
+        /// Registers a FourCC value under the given type.
+        /// This will then be available for any FourCCSelector attributes with that type.
+        /// </summary>
+        static public FourCC Register(Type inType, FourCC inCode, string inName = null, string inDescription = null)
+        {
+            GetRegistry(inType, true, false).AddEntry(inCode, inName, inDescription);
+            return inCode;
         }
 
         static private Dictionary<IntPtr, Registry> s_Registry = new Dictionary<IntPtr, Registry>();

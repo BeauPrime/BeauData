@@ -6,7 +6,6 @@
  * File:    BinarySerializer.cs
  * Purpose: Serializes to a JSON format.
  */
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,12 +48,20 @@ namespace BeauData.Format
         {
             m_Stack.Clear();
             m_Current = m_Root;
+
+            JSON serializerVersion = m_Current[SERIALIZER_VERSION_KEY];
+            if (serializerVersion != null)
+                SerializerVersion = serializerVersion.AsUShort;
+            else
+                SerializerVersion = VERSION_INITIAL;
         }
 
         protected override void BeginWriteRoot(string inRootName)
         {
             m_Stack.Clear();
             m_Current = m_Root;
+
+            m_Current[SERIALIZER_VERSION_KEY].AsUShort = SerializerVersion;
         }
 
         protected override void EndRoot()

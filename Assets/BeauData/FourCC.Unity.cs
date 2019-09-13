@@ -253,6 +253,7 @@ namespace BeauData
     }
 
     [Conditional("UNITY_EDITOR")]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.ReturnValue | AttributeTargets.Parameter, Inherited = true, AllowMultiple = false)]
     public class FourCCSelectorAttribute : PropertyAttribute
     {
         #if UNITY_EDITOR

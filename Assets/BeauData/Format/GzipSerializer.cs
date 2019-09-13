@@ -100,12 +100,21 @@ namespace BeauData.Format
 
                 ReadNextFrame();
             }
+
+            if (m_Current.Type == FieldType.UINT16)
+            {
+                SerializerVersion = (ushort) m_Current.Value;
+                ReadNextFrame();
+            }
         }
 
         protected override void BeginWriteRoot(string inRootName)
         {
             m_Gzip = new GZipStream(m_Stream, CompressionMode.Compress);
             m_Writer = new BinaryWriter(m_Gzip);
+
+            ushort currentVersion = SerializerVersion;
+            Write_UInt16(ref currentVersion);
 
             BeginWriteObject();
         }

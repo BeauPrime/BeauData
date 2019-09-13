@@ -29,7 +29,6 @@
  * SOFTWARE.
  * 
  * * * * */
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1148,6 +1147,9 @@ namespace BeauData
         // Writes the given text with escaped characters
         private static void WriteEscaped(StringBuilder ioBuilder, string inText)
         {
+            if (inText == null)
+                return;
+                
             for (int i = 0; i < inText.Length; ++i)
             {
                 char c = inText[i];
