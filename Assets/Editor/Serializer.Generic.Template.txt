@@ -1,47 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using SerializedType = %TypeName-Full%;
+﻿using System.Collections.Generic;
 
 namespace BeauData
 {
     public abstract partial class Serializer
     {
-        protected abstract bool Read_%TypeName%(ref SerializedType ioData);
-        protected abstract void Write_%TypeName%(ref SerializedType ioData);
+        protected abstract bool Read_%TypeName%(ref %TypeName-Full% ioData);
+        protected abstract void Write_%TypeName%(ref %TypeName-Full% ioData);
 
-        public void Serialize(string inKey, ref SerializedType ioData, FieldOptions inOptions = FieldOptions.None)
+        private ReadFunc<%TypeName-Full%> Read_%TypeName%_Cached;
+        private WriteFunc<%TypeName-Full%> Write_%TypeName%_Cached;
+
+        public void Serialize(string inKey, ref %TypeName-Full% ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inOptions, Read_%TypeName%, Write_%TypeName%);
+            DoSerialize<%TypeName-Full%>(inKey, ref ioData, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, SerializedType inDefault, FieldOptions inOptions = FieldOptions.None)
+        public void Serialize(string inKey, ref %TypeName-Full% ioData, %TypeName-Full% inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inDefault, inOptions, Read_%TypeName%, Write_%TypeName%);
+            DoSerialize<%TypeName-Full%>(inKey, ref ioData, inDefault, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
 
-        public void Array(string inKey, ref List<SerializedType> ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref List<%TypeName-Full%> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_%TypeName%, Write_%TypeName%);
+            DoArray<%TypeName-Full%>(inKey, ref ioArray, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
 
-        public void Array(string inKey, ref SerializedType[] ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref %TypeName-Full%[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_%TypeName%, Write_%TypeName%);
+            DoArray<%TypeName-Full%>(inKey, ref ioArray, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
 
-        public void Set(string inKey, ref HashSet<SerializedType> ioSet, FieldOptions inOptions = FieldOptions.None)
+        public void Set(string inKey, ref HashSet<%TypeName-Full%> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSet<SerializedType>(inKey, ref ioSet, inOptions, Read_%TypeName%, Write_%TypeName%);
+            DoSet<%TypeName-Full%>(inKey, ref ioSet, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
 
-        public void Map(string inKey, ref Dictionary<string, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<string, %TypeName-Full%> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_%TypeName%, Write_%TypeName%);
+            DoMap<%TypeName-Full%>(inKey, ref ioMap, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
 
-        public void Map(string inKey, ref Dictionary<int, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<int, %TypeName-Full%> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_%TypeName%, Write_%TypeName%);
+            DoMap<%TypeName-Full%>(inKey, ref ioMap, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
     }
 }

@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-using SerializedType = UnityEngine.Color;
 
 namespace BeauData
 {
     public abstract partial class Serializer
     {
-        private bool Read_Color(ref SerializedType ioData)
+        private bool Read_Color(ref UnityEngine.Color ioData)
         {
             if (!IsBinary())
             {
@@ -25,7 +24,7 @@ namespace BeauData
                 return bSuccess;
             }
         }
-        private void Write_Color(ref SerializedType ioData)
+        private void Write_Color(ref UnityEngine.Color ioData)
         {
             if (!IsBinary())
             {
@@ -39,39 +38,56 @@ namespace BeauData
             }
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, FieldOptions inOptions = FieldOptions.None)
+        private ReadFunc<UnityEngine.Color> Read_Color_Cached;
+        private WriteFunc<UnityEngine.Color> Write_Color_Cached;
+
+        public void Serialize(string inKey, ref UnityEngine.Color ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inOptions, Read_Color, Write_Color);
+            DoSerialize<UnityEngine.Color>(inKey, ref ioData, inOptions,
+                Read_Color_Cached ?? (Read_Color_Cached = Read_Color),
+                Write_Color_Cached ?? (Write_Color_Cached = Write_Color));
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, SerializedType inDefault, FieldOptions inOptions = FieldOptions.None)
+        public void Serialize(string inKey, ref UnityEngine.Color ioData, UnityEngine.Color inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inDefault, inOptions, Read_Color, Write_Color);
+            DoSerialize<UnityEngine.Color>(inKey, ref ioData, inDefault, inOptions,
+                Read_Color_Cached ?? (Read_Color_Cached = Read_Color),
+                Write_Color_Cached ?? (Write_Color_Cached = Write_Color));
         }
 
-        public void Array(string inKey, ref List<SerializedType> ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref List<UnityEngine.Color> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Color, Write_Color);
+            DoArray<UnityEngine.Color>(inKey, ref ioArray, inOptions,
+                Read_Color_Cached ?? (Read_Color_Cached = Read_Color),
+                Write_Color_Cached ?? (Write_Color_Cached = Write_Color));
         }
 
-        public void Array(string inKey, ref SerializedType[] ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref UnityEngine.Color[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Color, Write_Color);
+            DoArray<UnityEngine.Color>(inKey, ref ioArray, inOptions,
+                Read_Color_Cached ?? (Read_Color_Cached = Read_Color),
+                Write_Color_Cached ?? (Write_Color_Cached = Write_Color));
         }
 
-        public void Set(string inKey, ref HashSet<SerializedType> ioSet, FieldOptions inOptions = FieldOptions.None)
+        public void Set(string inKey, ref HashSet<UnityEngine.Color> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSet<SerializedType>(inKey, ref ioSet, inOptions, Read_Color, Write_Color);
+            DoSet<UnityEngine.Color>(inKey, ref ioSet, inOptions,
+                Read_Color_Cached ?? (Read_Color_Cached = Read_Color),
+                Write_Color_Cached ?? (Write_Color_Cached = Write_Color));
         }
 
-        public void Map(string inKey, ref Dictionary<string, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<string, UnityEngine.Color> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Color, Write_Color);
+            DoMap<UnityEngine.Color>(inKey, ref ioMap, inOptions,
+                Read_Color_Cached ?? (Read_Color_Cached = Read_Color),
+                Write_Color_Cached ?? (Write_Color_Cached = Write_Color));
         }
 
-        public void Map(string inKey, ref Dictionary<int, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<int, UnityEngine.Color> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Color, Write_Color);
+            DoMap<UnityEngine.Color>(inKey, ref ioMap, inOptions,
+                Read_Color_Cached ?? (Read_Color_Cached = Read_Color),
+                Write_Color_Cached ?? (Write_Color_Cached = Write_Color));
         }
 
         static private uint ColorToUint(ref Color inColor)

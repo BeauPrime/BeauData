@@ -11,7 +11,8 @@ namespace BeauData
         private bool Read_Object<T>(ref T inObject) where T : ISerializedObject
         {
             string typeName = null;
-            bool typeSuccess = DoRead(TYPE_KEY, ref typeName, null, FieldOptions.PreferAttribute, Read_String);
+            bool typeSuccess = DoRead(TYPE_KEY, ref typeName, null, FieldOptions.PreferAttribute,
+                Read_String_Cached ?? (Read_String_Cached = Read_String));
 
             if (!typeSuccess)
                 AddErrorMessage("Unable to read object type info");
@@ -22,17 +23,23 @@ namespace BeauData
 
             if (inObject == null || inObject.GetType().TypeHandle.Value != objectType.TypeHandle.Value)
             {
-                inObject = (T)TypeUtility.Instantiate(objectType, this);
+                inObject = (T) TypeUtility.Instantiate(objectType, this);
             }
 
             ushort version = 1;
-            bool versionSuccess = DoRead(VERSION_KEY, ref version, (ushort)1, FieldOptions.PreferAttribute, Read_UInt16);
-            
+            bool versionSuccess = DoRead(VERSION_KEY, ref version, (ushort) 1, FieldOptions.PreferAttribute, Read_UInt16_Cached ?? (Read_UInt16_Cached = Read_UInt16));
+
             if (!versionSuccess)
                 AddErrorMessage("Unable to read object version info");
 
             ushort prevVersion = ObjectVersion;
             ObjectVersion = version;
+
+            ISerializedCallbacks callback = inObject as ISerializedCallbacks;
+            if (callback != null)
+            {
+                PreSerialize(callback);
+            }
 
             int prevErrorLength = m_ErrorString.Length;
             inObject.Serialize(this);
@@ -47,7 +54,7 @@ namespace BeauData
             if (typeof(T).TypeHandle.Value != inObject.GetType().TypeHandle.Value)
             {
                 string typeName = TypeUtility.TypeToName(inObject.GetType());
-                DoWrite(TYPE_KEY, ref typeName, FieldOptions.PreferAttribute, Write_String);
+                DoWrite(TYPE_KEY, ref typeName, FieldOptions.PreferAttribute, Write_String_Cached ?? (Write_String_Cached = Write_String));
             }
             else if (RequiresExplicitNull())
             {
@@ -56,11 +63,11 @@ namespace BeauData
 
             ushort version = 1;
             if (inObject is ISerializedVersion)
-                version = ((ISerializedVersion)inObject).Version;
+                version = ((ISerializedVersion) inObject).Version;
 
             if (version != 1)
             {
-                DoWrite(VERSION_KEY, ref version, FieldOptions.PreferAttribute, Write_UInt16);
+                DoWrite(VERSION_KEY, ref version, FieldOptions.PreferAttribute, Write_UInt16_Cached ?? (Write_UInt16_Cached = Write_UInt16));
             }
             else if (RequiresExplicitNull())
             {
@@ -69,6 +76,12 @@ namespace BeauData
 
             ushort prevVersion = ObjectVersion;
             ObjectVersion = version;
+
+            ISerializedCallbacks callback = inObject as ISerializedCallbacks;
+            if (callback != null)
+            {
+                PreSerialize(callback);
+            }
 
             inObject.Serialize(this);
 
@@ -287,7 +300,7 @@ namespace BeauData
             {
                 BeginWriteArray(inKey);
                 DeclareChildCount(ioSet.Count);
-                foreach(var item in ioSet)
+                foreach (var item in ioSet)
                 {
                     T obj = item;
                     DoWriteObject<T>(ref obj);
@@ -336,8 +349,8 @@ namespace BeauData
                             bSuccess &= BeginReadObject(i);
                             {
                                 string key = null;
-                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, this.Read_String);
-                                
+                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_String_Cached ?? (Read_String_Cached = Read_String));
+
                                 T obj = default(T);
                                 bSuccess &= DoReadObject(MAP_VALUE, ref obj, FieldOptions.None);
 
@@ -420,7 +433,7 @@ namespace BeauData
                             bSuccess &= BeginReadObject(i);
                             {
                                 int key = default(int);
-                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, this.Read_Int32);
+                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_Int32_Cached ?? (Read_Int32_Cached = Read_Int32));
 
                                 T obj = default(T);
                                 bSuccess &= DoReadObject(MAP_VALUE, ref obj, FieldOptions.None);

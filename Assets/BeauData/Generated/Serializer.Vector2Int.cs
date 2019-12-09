@@ -1,58 +1,42 @@
-using System;
 using System.Collections.Generic;
-using SerializedType = UnityEngine.Vector2Int;
 
 namespace BeauData
 {
     public abstract partial class Serializer
     {
-        static private void Serialize_Vector2Int(ref SerializedType ioData, Serializer ioSerializer)
+        public void Serialize(string inKey, ref UnityEngine.Vector2Int ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            int x = ioData.x, y = ioData.y;
-
-            ioSerializer.Serialize("x", ref x, FieldOptions.PreferAttribute);
-            ioSerializer.Serialize("y", ref y, FieldOptions.PreferAttribute);
-
-            if (ioSerializer.IsReading)
-            {
-                ioData.x = x;
-                ioData.y = y;
-            }
+            DoStruct<UnityEngine.Vector2Int>(inKey, ref ioData, inOptions, Serialize_Vector2Int);
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, FieldOptions inOptions = FieldOptions.None)
+        public void Serialize(string inKey, ref UnityEngine.Vector2Int ioData, UnityEngine.Vector2Int inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStruct<SerializedType>(inKey, ref ioData, inOptions, Serialize_Vector2Int);
+            DoStruct<UnityEngine.Vector2Int>(inKey, ref ioData, inDefault, inOptions, Serialize_Vector2Int);
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, SerializedType inDefault, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref List<UnityEngine.Vector2Int> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStruct<SerializedType>(inKey, ref ioData, inDefault, inOptions, Serialize_Vector2Int);
+            DoStructArray<UnityEngine.Vector2Int>(inKey, ref ioArray, inOptions, Serialize_Vector2Int);
         }
 
-        public void Array(string inKey, ref List<SerializedType> ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref UnityEngine.Vector2Int[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructArray<SerializedType>(inKey, ref ioArray, inOptions, Serialize_Vector2Int);
+            DoStructArray<UnityEngine.Vector2Int>(inKey, ref ioArray, inOptions, Serialize_Vector2Int);
         }
 
-        public void Array(string inKey, ref SerializedType[] ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Set(string inKey, ref HashSet<UnityEngine.Vector2Int> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructArray<SerializedType>(inKey, ref ioArray, inOptions, Serialize_Vector2Int);
+            DoStructSet<UnityEngine.Vector2Int>(inKey, ref ioSet, inOptions, Serialize_Vector2Int);
         }
 
-        public void Set(string inKey, ref HashSet<SerializedType> ioSet, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<string, UnityEngine.Vector2Int> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructSet<SerializedType>(inKey, ref ioSet, inOptions, Serialize_Vector2Int);
+            DoStructMap<UnityEngine.Vector2Int>(inKey, ref ioMap, inOptions, Serialize_Vector2Int);
         }
 
-        public void Map(string inKey, ref Dictionary<string, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<int, UnityEngine.Vector2Int> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructMap<SerializedType>(inKey, ref ioMap, inOptions, Serialize_Vector2Int);
-        }
-
-        public void Map(string inKey, ref Dictionary<int, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
-        {
-            DoStructMap<SerializedType>(inKey, ref ioMap, inOptions, Serialize_Vector2Int);
+            DoStructMap<UnityEngine.Vector2Int>(inKey, ref ioMap, inOptions, Serialize_Vector2Int);
         }
     }
 }

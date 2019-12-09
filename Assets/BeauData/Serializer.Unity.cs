@@ -582,7 +582,7 @@ namespace BeauData
                             bSuccess &= BeginReadObject(i);
                             {
                                 string key = null;
-                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, this.Read_String);
+                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_String_Cached ?? (Read_String_Cached = Read_String));
 
                                 T obj = default(T);
                                 bSuccess &= DoReadUnity(MAP_VALUE, ref obj, FieldOptions.None, inReader);
@@ -660,7 +660,7 @@ namespace BeauData
                             bSuccess &= BeginReadObject(i);
                             {
                                 int key = default(int);
-                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, this.Read_Int32);
+                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_Int32_Cached ?? (Read_Int32_Cached = Read_Int32));
 
                                 T obj = default(T);
                                 bSuccess &= DoReadUnity(MAP_VALUE, ref obj, FieldOptions.None, inReader);

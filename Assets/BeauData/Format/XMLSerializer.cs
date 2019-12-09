@@ -23,7 +23,7 @@ namespace BeauData.Format
         private XmlElement m_Root;
         private XmlDocument m_Document;
 
-        internal XMLSerializer()
+        public XMLSerializer()
         {
             m_Document = new XmlDocument();
         }

@@ -1,47 +1,62 @@
-using System;
 using System.Collections.Generic;
-using SerializedType = System.Double;
 
 namespace BeauData
 {
     public abstract partial class Serializer
     {
-        protected abstract bool Read_Double(ref SerializedType ioData);
-        protected abstract void Write_Double(ref SerializedType ioData);
+        protected abstract bool Read_Double(ref System.Double ioData);
+        protected abstract void Write_Double(ref System.Double ioData);
 
-        public void Serialize(string inKey, ref SerializedType ioData, FieldOptions inOptions = FieldOptions.None)
+        private ReadFunc<System.Double> Read_Double_Cached;
+        private WriteFunc<System.Double> Write_Double_Cached;
+
+        public void Serialize(string inKey, ref System.Double ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inOptions, Read_Double, Write_Double);
+            DoSerialize<System.Double>(inKey, ref ioData, inOptions,
+                Read_Double_Cached ?? (Read_Double_Cached = Read_Double),
+                Write_Double_Cached ?? (Write_Double_Cached = Write_Double));
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, SerializedType inDefault, FieldOptions inOptions = FieldOptions.None)
+        public void Serialize(string inKey, ref System.Double ioData, System.Double inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inDefault, inOptions, Read_Double, Write_Double);
+            DoSerialize<System.Double>(inKey, ref ioData, inDefault, inOptions,
+                Read_Double_Cached ?? (Read_Double_Cached = Read_Double),
+                Write_Double_Cached ?? (Write_Double_Cached = Write_Double));
         }
 
-        public void Array(string inKey, ref List<SerializedType> ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref List<System.Double> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Double, Write_Double);
+            DoArray<System.Double>(inKey, ref ioArray, inOptions,
+                Read_Double_Cached ?? (Read_Double_Cached = Read_Double),
+                Write_Double_Cached ?? (Write_Double_Cached = Write_Double));
         }
 
-        public void Array(string inKey, ref SerializedType[] ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref System.Double[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Double, Write_Double);
+            DoArray<System.Double>(inKey, ref ioArray, inOptions,
+                Read_Double_Cached ?? (Read_Double_Cached = Read_Double),
+                Write_Double_Cached ?? (Write_Double_Cached = Write_Double));
         }
 
-        public void Set(string inKey, ref HashSet<SerializedType> ioSet, FieldOptions inOptions = FieldOptions.None)
+        public void Set(string inKey, ref HashSet<System.Double> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSet<SerializedType>(inKey, ref ioSet, inOptions, Read_Double, Write_Double);
+            DoSet<System.Double>(inKey, ref ioSet, inOptions,
+                Read_Double_Cached ?? (Read_Double_Cached = Read_Double),
+                Write_Double_Cached ?? (Write_Double_Cached = Write_Double));
         }
 
-        public void Map(string inKey, ref Dictionary<string, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<string, System.Double> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Double, Write_Double);
+            DoMap<System.Double>(inKey, ref ioMap, inOptions,
+                Read_Double_Cached ?? (Read_Double_Cached = Read_Double),
+                Write_Double_Cached ?? (Write_Double_Cached = Write_Double));
         }
 
-        public void Map(string inKey, ref Dictionary<int, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<int, System.Double> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Double, Write_Double);
+            DoMap<System.Double>(inKey, ref ioMap, inOptions,
+                Read_Double_Cached ?? (Read_Double_Cached = Read_Double),
+                Write_Double_Cached ?? (Write_Double_Cached = Write_Double));
         }
     }
 }

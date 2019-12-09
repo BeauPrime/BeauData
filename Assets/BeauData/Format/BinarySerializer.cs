@@ -68,7 +68,7 @@ namespace BeauData.Format
         protected BinaryWriter m_Writer;
         protected BinaryReader m_Reader;
 
-        internal BinarySerializer()
+        public BinarySerializer()
         {
             m_Stream = new MemoryStream();
         }

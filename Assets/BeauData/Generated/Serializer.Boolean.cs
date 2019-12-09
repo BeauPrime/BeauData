@@ -1,47 +1,62 @@
-using System;
 using System.Collections.Generic;
-using SerializedType = System.Boolean;
 
 namespace BeauData
 {
     public abstract partial class Serializer
     {
-        protected abstract bool Read_Boolean(ref SerializedType ioData);
-        protected abstract void Write_Boolean(ref SerializedType ioData);
+        protected abstract bool Read_Boolean(ref System.Boolean ioData);
+        protected abstract void Write_Boolean(ref System.Boolean ioData);
 
-        public void Serialize(string inKey, ref SerializedType ioData, FieldOptions inOptions = FieldOptions.None)
+        private ReadFunc<System.Boolean> Read_Boolean_Cached;
+        private WriteFunc<System.Boolean> Write_Boolean_Cached;
+
+        public void Serialize(string inKey, ref System.Boolean ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inOptions, Read_Boolean, Write_Boolean);
+            DoSerialize<System.Boolean>(inKey, ref ioData, inOptions,
+                Read_Boolean_Cached ?? (Read_Boolean_Cached = Read_Boolean),
+                Write_Boolean_Cached ?? (Write_Boolean_Cached = Write_Boolean));
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, SerializedType inDefault, FieldOptions inOptions = FieldOptions.None)
+        public void Serialize(string inKey, ref System.Boolean ioData, System.Boolean inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inDefault, inOptions, Read_Boolean, Write_Boolean);
+            DoSerialize<System.Boolean>(inKey, ref ioData, inDefault, inOptions,
+                Read_Boolean_Cached ?? (Read_Boolean_Cached = Read_Boolean),
+                Write_Boolean_Cached ?? (Write_Boolean_Cached = Write_Boolean));
         }
 
-        public void Array(string inKey, ref List<SerializedType> ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref List<System.Boolean> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Boolean, Write_Boolean);
+            DoArray<System.Boolean>(inKey, ref ioArray, inOptions,
+                Read_Boolean_Cached ?? (Read_Boolean_Cached = Read_Boolean),
+                Write_Boolean_Cached ?? (Write_Boolean_Cached = Write_Boolean));
         }
 
-        public void Array(string inKey, ref SerializedType[] ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref System.Boolean[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Boolean, Write_Boolean);
+            DoArray<System.Boolean>(inKey, ref ioArray, inOptions,
+                Read_Boolean_Cached ?? (Read_Boolean_Cached = Read_Boolean),
+                Write_Boolean_Cached ?? (Write_Boolean_Cached = Write_Boolean));
         }
 
-        public void Set(string inKey, ref HashSet<SerializedType> ioSet, FieldOptions inOptions = FieldOptions.None)
+        public void Set(string inKey, ref HashSet<System.Boolean> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSet<SerializedType>(inKey, ref ioSet, inOptions, Read_Boolean, Write_Boolean);
+            DoSet<System.Boolean>(inKey, ref ioSet, inOptions,
+                Read_Boolean_Cached ?? (Read_Boolean_Cached = Read_Boolean),
+                Write_Boolean_Cached ?? (Write_Boolean_Cached = Write_Boolean));
         }
 
-        public void Map(string inKey, ref Dictionary<string, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<string, System.Boolean> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Boolean, Write_Boolean);
+            DoMap<System.Boolean>(inKey, ref ioMap, inOptions,
+                Read_Boolean_Cached ?? (Read_Boolean_Cached = Read_Boolean),
+                Write_Boolean_Cached ?? (Write_Boolean_Cached = Write_Boolean));
         }
 
-        public void Map(string inKey, ref Dictionary<int, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<int, System.Boolean> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Boolean, Write_Boolean);
+            DoMap<System.Boolean>(inKey, ref ioMap, inOptions,
+                Read_Boolean_Cached ?? (Read_Boolean_Cached = Read_Boolean),
+                Write_Boolean_Cached ?? (Write_Boolean_Cached = Write_Boolean));
         }
     }
 }

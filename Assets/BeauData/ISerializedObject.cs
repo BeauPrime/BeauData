@@ -5,7 +5,7 @@
  * 
  * File:    ISerializedObject.cs
  * Purpose: Base interface for serialized objects.
-*/
+ */
 
 namespace BeauData
 {

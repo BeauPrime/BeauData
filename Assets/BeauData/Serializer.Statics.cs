@@ -55,7 +55,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the given text asset.
         /// </summary>
-        static public bool Read<T>(ref T ioObject, TextAsset inTextAsset, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool Read<T>(ref T ioObject, TextAsset inTextAsset, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             if (inTextAsset == null)
             {
@@ -65,17 +65,17 @@ namespace BeauData
 
             using(MemoryStream stream = GetStream(inTextAsset.bytes))
             {
-                return Read<T>(ref ioObject, stream, inFormat);
+                return Read<T>(ref ioObject, stream, inFormat, inContext);
             }
         }
 
         /// <summary>
         /// Reads an object from the given text asset.
         /// </summary>
-        static public T Read<T>(TextAsset inAsset, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T Read<T>(TextAsset inAsset, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            Read<T>(ref obj, inAsset, inFormat);
+            Read<T>(ref obj, inAsset, inFormat, inContext);
             return obj;
         }
 
@@ -92,7 +92,7 @@ namespace BeauData
         #if WWW_OBSOLETE
         [Obsolete(WWW_OBSOLETE_MESSAGE)]
         #endif // WWW_OBSOLETE
-        static public bool Read<T>(ref T ioObject, WWW inWWW, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool Read<T>(ref T ioObject, WWW inWWW, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             if (!String.IsNullOrEmpty(inWWW.error))
             {
@@ -102,7 +102,7 @@ namespace BeauData
 
             using(MemoryStream stream = GetStream(inWWW.bytes))
             {
-                return Read<T>(ref ioObject, stream, inFormat);
+                return Read<T>(ref ioObject, stream, inFormat, inContext);
             }
         }
 
@@ -112,10 +112,10 @@ namespace BeauData
         #if WWW_OBSOLETE
         [Obsolete(WWW_OBSOLETE_MESSAGE)]
         #endif // WWW_OBSOLETE
-        static public T Read<T>(WWW inWWW, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T Read<T>(WWW inWWW, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            Read<T>(ref obj, inWWW, inFormat);
+            Read<T>(ref obj, inWWW, inFormat, inContext);
             return obj;
         }
 
@@ -129,7 +129,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the given UnityWebRequest.
         /// </summary>
-        static public bool Read<T>(ref T ioObject, UnityWebRequest inWWW, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool Read<T>(ref T ioObject, UnityWebRequest inWWW, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             if (!String.IsNullOrEmpty(inWWW.error))
             {
@@ -139,17 +139,17 @@ namespace BeauData
 
             using(MemoryStream stream = GetStream(inWWW.downloadHandler.data))
             {
-                return Read<T>(ref ioObject, stream, inFormat);
+                return Read<T>(ref ioObject, stream, inFormat, inContext);
             }
         }
 
         /// <summary>
         /// Reads an object from the given UnityWebRequest.
         /// </summary>
-        static public T Read<T>(UnityWebRequest inWWW, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T Read<T>(UnityWebRequest inWWW, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            Read<T>(ref obj, inWWW, inFormat);
+            Read<T>(ref obj, inWWW, inFormat, inContext);
             return obj;
         }
 
@@ -160,7 +160,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the given text.
         /// </summary>
-        static public bool Read<T>(ref T ioObject, string inText, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool Read<T>(ref T ioObject, string inText, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             if (string.IsNullOrEmpty(inText))
             {
@@ -212,7 +212,7 @@ namespace BeauData
 
                 using(serializer)
                 {
-                    serializer.Read<T>(ref ioObject);
+                    serializer.Read<T>(ref ioObject, inContext);
                     if (serializer.HasErrors)
                         Debug.LogError("[BeauData] Error when reading object:\n" + serializer.Errors);
                     return !serializer.HasErrors;
@@ -229,10 +229,10 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the given text.
         /// </summary>
-        static public T Read<T>(string inString, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T Read<T>(string inString, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            Read<T>(ref obj, inString, inFormat);
+            Read<T>(ref obj, inString, inFormat, inContext);
             return obj;
         }
 
@@ -243,7 +243,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the given stream.
         /// </summary>
-        static public bool Read<T>(ref T ioObject, Stream inStream, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool Read<T>(ref T ioObject, Stream inStream, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             if (inStream == null)
             {
@@ -300,7 +300,7 @@ namespace BeauData
 
                 using(serializer)
                 {
-                    serializer.Read<T>(ref ioObject);
+                    serializer.Read<T>(ref ioObject, inContext);
                     if (serializer.HasErrors)
                         Debug.LogError("[BeauData] Error when reading object:\n" + serializer.Errors);
                     return !serializer.HasErrors;
@@ -317,10 +317,10 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the given stream.
         /// </summary>
-        static public T Read<T>(Stream inStream, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T Read<T>(Stream inStream, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            Read<T>(ref obj, inStream, inFormat);
+            Read<T>(ref obj, inStream, inFormat, inContext);
             return obj;
         }
 
@@ -331,18 +331,18 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the given byte array.
         /// </summary>
-        static public bool Read<T>(ref T ioObject, byte[] inBytes, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool Read<T>(ref T ioObject, byte[] inBytes, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
-            return Read<T>(ref ioObject, GetStream(inBytes), inFormat);
+            return Read<T>(ref ioObject, GetStream(inBytes), inFormat, inContext);
         }
 
         /// <summary>
         /// Reads an object from the given byte array.
         /// </summary>
-        static public T Read<T>(byte[] inBytes, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T Read<T>(byte[] inBytes, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            Read<T>(ref obj, inBytes, inFormat);
+            Read<T>(ref obj, inBytes, inFormat, inContext);
             return obj;
         }
 
@@ -353,7 +353,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from a file.
         /// </summary>
-        static public bool ReadFile<T>(ref T ioObject, string inFilePath, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool ReadFile<T>(ref T ioObject, string inFilePath, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             string filePath = PathUtility.CorrectPath(inFilePath, inFormat);
             if (!File.Exists(filePath))
@@ -364,17 +364,17 @@ namespace BeauData
 
             using(FileStream stream = File.OpenRead(filePath))
             {
-                return Read(ref ioObject, stream, inFormat);
+                return Read(ref ioObject, stream, inFormat, inContext);
             }
         }
 
         /// <summary>
         /// Reads an object from a file.
         /// </summary>
-        static public T ReadFile<T>(string inFilePath, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T ReadFile<T>(string inFilePath, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            ReadFile<T>(ref obj, inFilePath, inFormat);
+            ReadFile<T>(ref obj, inFilePath, inFormat, inContext);
             return obj;
         }
 
@@ -385,18 +385,18 @@ namespace BeauData
         /// <summary>
         /// Reads an object from PlayerPrefs.
         /// </summary>
-        static public bool ReadPrefs<T>(ref T ioObject, string inKey, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public bool ReadPrefs<T>(ref T ioObject, string inKey, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
-            return Read(ref ioObject, PlayerPrefs.GetString(inKey, string.Empty), inFormat);
+            return Read(ref ioObject, PlayerPrefs.GetString(inKey, string.Empty), inFormat, inContext);
         }
 
         /// <summary>
         /// Reads an object from PlayerPrefs.
         /// </summary>
-        static public T ReadPrefs<T>(string inKey, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public T ReadPrefs<T>(string inKey, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             T obj = default(T);
-            ReadPrefs<T>(ref obj, inKey, inFormat);
+            ReadPrefs<T>(ref obj, inKey, inFormat, inContext);
             return obj;
         }
 
@@ -409,14 +409,14 @@ namespace BeauData
         /// <summary>
         /// Writes an object to a string.
         /// </summary>
-        static public string Write<T>(T inObject, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public string Write<T>(T inObject, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             if (inFormat == Format.AutoDetect)
                 inFormat = DefaultWriteFormat;
 
             using(Serializer serializer = CreateWriter(inFormat))
             {
-                serializer.Write<T>(ref inObject);
+                serializer.Write<T>(ref inObject, inContext);
                 return serializer.AsString(inOptions);
             }
         }
@@ -424,14 +424,14 @@ namespace BeauData
         /// <summary>
         /// Writes an object to the given stream.
         /// </summary>
-        static public void Write<T>(T inObject, Stream inStream, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public void Write<T>(T inObject, Stream inStream, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             if (inFormat == Format.AutoDetect)
                 inFormat = DefaultWriteFormat;
 
             using(Serializer serializer = CreateWriter(inFormat))
             {
-                serializer.Write<T>(ref inObject);
+                serializer.Write<T>(ref inObject, inContext);
                 serializer.AsStream(inStream, inOptions);
             }
         }
@@ -439,19 +439,19 @@ namespace BeauData
         /// <summary>
         /// Writes an object to a file.
         /// </summary>
-        static public void WriteFile<T>(T inObject, string inFilePath, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public void WriteFile<T>(T inObject, string inFilePath, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             string finalPath = PathUtility.CorrectPath(inFilePath, inFormat);
             using(FileStream stream = File.Open(finalPath, FileMode.Create))
             {
-                Write(inObject, stream, inOptions, inFormat);
+                Write(inObject, stream, inOptions, inFormat, inContext);
             }
         }
 
         /// <summary>
         /// Writes an object to PlayerPrefs.
         /// </summary>
-        static public void WritePrefs<T>(T inObject, string inKey, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect) where T : ISerializedObject
+        static public void WritePrefs<T>(T inObject, string inKey, OutputOptions inOptions = OutputOptions.None, Format inFormat = Format.AutoDetect, ISerializerContext inContext = null) where T : ISerializedObject
         {
             PlayerPrefs.SetString(inKey, Write(inObject, inOptions, inFormat));
         }

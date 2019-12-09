@@ -21,7 +21,7 @@ namespace BeauData.Format
         private JSON m_Current;
         private JSON m_Root;
 
-        internal JSONSerializer()
+        public JSONSerializer()
         {
             m_Root = JSON.CreateObject();
         }

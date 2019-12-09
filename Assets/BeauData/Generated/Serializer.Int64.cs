@@ -1,47 +1,62 @@
-using System;
 using System.Collections.Generic;
-using SerializedType = System.Int64;
 
 namespace BeauData
 {
     public abstract partial class Serializer
     {
-        protected abstract bool Read_Int64(ref SerializedType ioData);
-        protected abstract void Write_Int64(ref SerializedType ioData);
+        protected abstract bool Read_Int64(ref System.Int64 ioData);
+        protected abstract void Write_Int64(ref System.Int64 ioData);
 
-        public void Serialize(string inKey, ref SerializedType ioData, FieldOptions inOptions = FieldOptions.None)
+        private ReadFunc<System.Int64> Read_Int64_Cached;
+        private WriteFunc<System.Int64> Write_Int64_Cached;
+
+        public void Serialize(string inKey, ref System.Int64 ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inOptions, Read_Int64, Write_Int64);
+            DoSerialize<System.Int64>(inKey, ref ioData, inOptions,
+                Read_Int64_Cached ?? (Read_Int64_Cached = Read_Int64),
+                Write_Int64_Cached ?? (Write_Int64_Cached = Write_Int64));
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, SerializedType inDefault, FieldOptions inOptions = FieldOptions.None)
+        public void Serialize(string inKey, ref System.Int64 ioData, System.Int64 inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inDefault, inOptions, Read_Int64, Write_Int64);
+            DoSerialize<System.Int64>(inKey, ref ioData, inDefault, inOptions,
+                Read_Int64_Cached ?? (Read_Int64_Cached = Read_Int64),
+                Write_Int64_Cached ?? (Write_Int64_Cached = Write_Int64));
         }
 
-        public void Array(string inKey, ref List<SerializedType> ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref List<System.Int64> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Int64, Write_Int64);
+            DoArray<System.Int64>(inKey, ref ioArray, inOptions,
+                Read_Int64_Cached ?? (Read_Int64_Cached = Read_Int64),
+                Write_Int64_Cached ?? (Write_Int64_Cached = Write_Int64));
         }
 
-        public void Array(string inKey, ref SerializedType[] ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref System.Int64[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Int64, Write_Int64);
+            DoArray<System.Int64>(inKey, ref ioArray, inOptions,
+                Read_Int64_Cached ?? (Read_Int64_Cached = Read_Int64),
+                Write_Int64_Cached ?? (Write_Int64_Cached = Write_Int64));
         }
 
-        public void Set(string inKey, ref HashSet<SerializedType> ioSet, FieldOptions inOptions = FieldOptions.None)
+        public void Set(string inKey, ref HashSet<System.Int64> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSet<SerializedType>(inKey, ref ioSet, inOptions, Read_Int64, Write_Int64);
+            DoSet<System.Int64>(inKey, ref ioSet, inOptions,
+                Read_Int64_Cached ?? (Read_Int64_Cached = Read_Int64),
+                Write_Int64_Cached ?? (Write_Int64_Cached = Write_Int64));
         }
 
-        public void Map(string inKey, ref Dictionary<string, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<string, System.Int64> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Int64, Write_Int64);
+            DoMap<System.Int64>(inKey, ref ioMap, inOptions,
+                Read_Int64_Cached ?? (Read_Int64_Cached = Read_Int64),
+                Write_Int64_Cached ?? (Write_Int64_Cached = Write_Int64));
         }
 
-        public void Map(string inKey, ref Dictionary<int, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<int, System.Int64> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Int64, Write_Int64);
+            DoMap<System.Int64>(inKey, ref ioMap, inOptions,
+                Read_Int64_Cached ?? (Read_Int64_Cached = Read_Int64),
+                Write_Int64_Cached ?? (Write_Int64_Cached = Write_Int64));
         }
     }
 }

@@ -9,12 +9,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
+
+[assembly: InternalsVisibleTo("BeauData.Editor")]
 
 namespace BeauData
 {
     public abstract partial class Serializer : IDisposable
     {
+        public enum Mode
+        {
+            Read,
+            Write
+        }
+
         protected const string SERIALIZER_VERSION_KEY = "__serializerVersion";
         protected const ushort VERSION_INITIAL = 1;
         protected const ushort VERSION_ENUM_COMPRESSION = 2;
@@ -31,6 +40,7 @@ namespace BeauData
 
         public bool IsReading { get; private set; }
         public bool IsWriting { get { return !IsReading; } }
+        public Mode CurrentMode { get { return IsReading ? Mode.Read : Mode.Write; } }
 
         /// <summary>
         /// Serializer version.
@@ -41,6 +51,11 @@ namespace BeauData
         /// Version number for the currently serializing ISerializedObject.
         /// </summary>
         public ushort ObjectVersion { get; private set; }
+
+        /// <summary>
+        /// Context object.
+        /// </summary>
+        public ISerializerContext Context { get; private set; }
 
         /// <summary>
         /// Returns if this serializer is binary.
@@ -604,7 +619,7 @@ namespace BeauData
                             bSuccess &= BeginReadObject(i);
                             {
                                 string key = null;
-                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, this.Read_String);
+                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_String_Cached ?? (Read_String_Cached = Read_String));
 
                                 T obj = default(T);
                                 bSuccess &= DoRead(MAP_VALUE, ref obj, FieldOptions.None, inReader);
@@ -691,7 +706,7 @@ namespace BeauData
                             bSuccess &= BeginReadObject(i);
                             {
                                 int key = default(int);
-                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, this.Read_Int32);
+                                bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_Int32_Cached ?? (Read_Int32_Cached = Read_Int32));
 
                                 T obj = default(T);
                                 bSuccess &= DoRead(MAP_VALUE, ref obj, FieldOptions.None, inReader);
@@ -742,27 +757,37 @@ namespace BeauData
         /// <summary>
         /// Reads this object from the given serializer.
         /// </summary>
-        private void Read<T>(ref T ioObject) where T : ISerializedObject
+        private void Read<T>(ref T ioObject, ISerializerContext inContext) where T : ISerializedObject
         {
             IsReading = true;
+
+            Context = inContext;
 
             BeginReadRoot(typeof(T).FullName);
             Read_Object<T>(ref ioObject);
             EndRoot();
+            PostSerialize();
+
+            Context = null;
         }
 
         /// <summary>
         /// Writes this object to the given serializer.
         /// </summary>
-        private void Write<T>(ref T ioObject) where T : ISerializedObject
+        private void Write<T>(ref T ioObject, ISerializerContext inContext) where T : ISerializedObject
         {
             IsReading = false;
 
             SerializerVersion = VERSION_MOSTRECENT;
 
+            Context = inContext;
+
             BeginWriteRoot(typeof(T).FullName);
             Write_Object<T>(ref ioObject);
             EndRoot();
+            PostSerialize();
+
+            Context = null;
         }
 
         #endregion
@@ -793,6 +818,27 @@ namespace BeauData
         }
 
         #endregion
+
+        #region Objects
+
+        private readonly List<ISerializedCallbacks> m_CallbackHandlers = new List<ISerializedCallbacks>();
+
+        private void PreSerialize(ISerializedCallbacks inCallback)
+        {
+            m_CallbackHandlers.Add(inCallback);
+        }
+
+        private void PostSerialize()
+        {
+            Mode mode = CurrentMode;
+            for (int i = 0, count = m_CallbackHandlers.Count; i < count; ++i)
+            {
+                m_CallbackHandlers[i].PostSerialize(mode, Context);
+            }
+            m_CallbackHandlers.Clear();
+        }
+
+        #endregion // Objects
 
         #region Output
 
@@ -828,6 +874,18 @@ namespace BeauData
             if (m_ErrorString.Length > 0)
                 m_ErrorString.Append('\n');
             m_ErrorString.AppendFormat(inMessage, inArgs);
+        }
+
+        /// <summary>
+        /// Adds an error message.
+        /// </summary>
+        protected void AddErrorMessage(string inMessage)
+        {
+            HasErrors = true;
+
+            if (m_ErrorString.Length > 0)
+                m_ErrorString.Append('\n');
+            m_ErrorString.Append(inMessage);
         }
 
         #endregion

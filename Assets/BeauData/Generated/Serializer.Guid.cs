@@ -1,47 +1,62 @@
-using System;
 using System.Collections.Generic;
-using SerializedType = System.Guid;
 
 namespace BeauData
 {
     public abstract partial class Serializer
     {
-        protected abstract bool Read_Guid(ref SerializedType ioData);
-        protected abstract void Write_Guid(ref SerializedType ioData);
+        protected abstract bool Read_Guid(ref System.Guid ioData);
+        protected abstract void Write_Guid(ref System.Guid ioData);
 
-        public void Serialize(string inKey, ref SerializedType ioData, FieldOptions inOptions = FieldOptions.None)
+        private ReadFunc<System.Guid> Read_Guid_Cached;
+        private WriteFunc<System.Guid> Write_Guid_Cached;
+
+        public void Serialize(string inKey, ref System.Guid ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inOptions, Read_Guid, Write_Guid);
+            DoSerialize<System.Guid>(inKey, ref ioData, inOptions,
+                Read_Guid_Cached ?? (Read_Guid_Cached = Read_Guid),
+                Write_Guid_Cached ?? (Write_Guid_Cached = Write_Guid));
         }
 
-        public void Serialize(string inKey, ref SerializedType ioData, SerializedType inDefault, FieldOptions inOptions = FieldOptions.None)
+        public void Serialize(string inKey, ref System.Guid ioData, System.Guid inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSerialize<SerializedType>(inKey, ref ioData, inDefault, inOptions, Read_Guid, Write_Guid);
+            DoSerialize<System.Guid>(inKey, ref ioData, inDefault, inOptions,
+                Read_Guid_Cached ?? (Read_Guid_Cached = Read_Guid),
+                Write_Guid_Cached ?? (Write_Guid_Cached = Write_Guid));
         }
 
-        public void Array(string inKey, ref List<SerializedType> ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref List<System.Guid> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Guid, Write_Guid);
+            DoArray<System.Guid>(inKey, ref ioArray, inOptions,
+                Read_Guid_Cached ?? (Read_Guid_Cached = Read_Guid),
+                Write_Guid_Cached ?? (Write_Guid_Cached = Write_Guid));
         }
 
-        public void Array(string inKey, ref SerializedType[] ioArray, FieldOptions inOptions = FieldOptions.None)
+        public void Array(string inKey, ref System.Guid[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoArray<SerializedType>(inKey, ref ioArray, inOptions, Read_Guid, Write_Guid);
+            DoArray<System.Guid>(inKey, ref ioArray, inOptions,
+                Read_Guid_Cached ?? (Read_Guid_Cached = Read_Guid),
+                Write_Guid_Cached ?? (Write_Guid_Cached = Write_Guid));
         }
 
-        public void Set(string inKey, ref HashSet<SerializedType> ioSet, FieldOptions inOptions = FieldOptions.None)
+        public void Set(string inKey, ref HashSet<System.Guid> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoSet<SerializedType>(inKey, ref ioSet, inOptions, Read_Guid, Write_Guid);
+            DoSet<System.Guid>(inKey, ref ioSet, inOptions,
+                Read_Guid_Cached ?? (Read_Guid_Cached = Read_Guid),
+                Write_Guid_Cached ?? (Write_Guid_Cached = Write_Guid));
         }
 
-        public void Map(string inKey, ref Dictionary<string, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<string, System.Guid> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Guid, Write_Guid);
+            DoMap<System.Guid>(inKey, ref ioMap, inOptions,
+                Read_Guid_Cached ?? (Read_Guid_Cached = Read_Guid),
+                Write_Guid_Cached ?? (Write_Guid_Cached = Write_Guid));
         }
 
-        public void Map(string inKey, ref Dictionary<int, SerializedType> ioMap, FieldOptions inOptions = FieldOptions.None)
+        public void Map(string inKey, ref Dictionary<int, System.Guid> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoMap<SerializedType>(inKey, ref ioMap, inOptions, Read_Guid, Write_Guid);
+            DoMap<System.Guid>(inKey, ref ioMap, inOptions,
+                Read_Guid_Cached ?? (Read_Guid_Cached = Read_Guid),
+                Write_Guid_Cached ?? (Write_Guid_Cached = Write_Guid));
         }
     }
 }

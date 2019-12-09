@@ -33,7 +33,7 @@ namespace BeauData.Format
 
         private GZipStream m_Gzip;
 
-        internal GZIPSerializer() : base()
+        public GZIPSerializer() : base()
         { }
 
         internal GZIPSerializer(MemoryStream inStream) : base(inStream)

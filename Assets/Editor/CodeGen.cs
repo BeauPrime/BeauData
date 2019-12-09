@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -26,7 +24,9 @@ namespace BeauData.Editor
             typeof(String),
             typeof(UInt16),
             typeof(UInt32),
-            typeof(UInt64)
+            typeof(UInt64),
+            typeof(FourCC),
+            typeof(Byte[])
         };
 
         static private readonly Type[] STRUCT_TYPES = new Type[]
@@ -46,38 +46,70 @@ namespace BeauData.Editor
         static private string s_GenericTemplate = null;
         static private string s_StructTemplate = null;
 
-        [MenuItem("Edit/BeauData/Generate Generic")]
+        [MenuItem("Assets/BeauData/Generate Generic")]
         static private void Generate()
+        {
+            GenerateBasic();
+            GenerateStructs();
+        }
+
+        [MenuItem("Assets/BeauData/Generate Generic (Basic)")]
+        static private void GenerateBasic()
         {
             foreach (var type in BASIC_TYPES)
                 GenerateBasicSerializer(type);
+        }
 
+        [MenuItem("Assets/BeauData/Generate Generic (Struct)")]
+        static private void GenerateStructs()
+        {
             foreach (var type in STRUCT_TYPES)
                 GenerateStructSerializer(type);
         }
 
         static private void GenerateBasicSerializer(Type inType)
         {
-            string path = GENERATED_PATH.Replace("%TypeName%", inType.Name);
+            string typeName, typeNameFull;
+            GetTypeNames(inType, out typeName, out typeNameFull);
+
+            string path = GENERATED_PATH.Replace("%TypeName%", typeName);
 
             if (s_GenericTemplate == null)
                 s_GenericTemplate = File.ReadAllText(BASIC_TEMPLATE_PATH);
 
-            string modifiedText = s_GenericTemplate.Replace("%TypeName%", inType.Name).Replace("%TypeName-Full%", inType.FullName);
+            string modifiedText = s_GenericTemplate.Replace("%TypeName%", typeName).Replace("%TypeName-Full%", typeNameFull);
             File.WriteAllText(path, modifiedText);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
         }
 
         static private void GenerateStructSerializer(Type inType)
         {
-            string path = GENERATED_PATH.Replace("%TypeName%", inType.Name);
+            string typeName, typeNameFull;
+            GetTypeNames(inType, out typeName, out typeNameFull);
+
+            string path = GENERATED_PATH.Replace("%TypeName%", typeName);
 
             if (s_StructTemplate == null)
                 s_StructTemplate = File.ReadAllText(STRUCT_TEMPLATE_PATH);
 
-            string modifiedText = s_StructTemplate.Replace("%TypeName%", inType.Name).Replace("%TypeName-Full%", inType.FullName);
+            string modifiedText = s_StructTemplate.Replace("%TypeName%", typeName).Replace("%TypeName-Full%", typeNameFull);
             File.WriteAllText(path, modifiedText);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        static private void GetTypeNames(Type inType, out string outName, out string outFullName)
+        {
+            string name = inType.Name;
+            string fullname = inType.FullName;
+
+            if (inType.IsArray)
+            {
+                name = inType.GetElementType().Name + "Array";
+                fullname = inType.GetElementType().FullName + "Array";
+            }
+
+            outName = name;
+            outFullName = fullname;
         }
     }
 }

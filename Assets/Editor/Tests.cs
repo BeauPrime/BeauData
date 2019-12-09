@@ -1,5 +1,8 @@
 using System;
+using System.Runtime.InteropServices;
+using BeauData.Format;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace BeauData.Editor
@@ -7,6 +10,8 @@ namespace BeauData.Editor
     static public class Tests
     {
         static private readonly Guid CONST_GUID = new Guid("c480fe9e-9116-45ca-a85b-623332bf0a33");
+
+        static private TestContext TestContext;
 
         #region Object Types
 
@@ -58,6 +63,16 @@ namespace BeauData.Editor
             inSerializer.Serialize("someVal2", ref inTest.SomeVal2);
         }
 
+        private class AssetRefTest : ISerializedObject
+        {
+            public Sprite SomeVal;
+
+            void ISerializedObject.Serialize(Serializer ioSerializer)
+            {
+                ioSerializer.AssetRef("someVal", ref SomeVal);
+            }
+        }
+
         #endregion // Object Types
 
         [SetUp]
@@ -66,6 +81,7 @@ namespace BeauData.Editor
             TypeUtility.RegisterAlias<TestClassA>("TestClassA");
             TypeUtility.RegisterAlias<TestClassB>("TestClassB");
             TypeUtility.RegisterSerializer<CustomSerializerTest>(CustomSerializerTestSerializer);
+            TestContext = AssetDatabase.LoadAssetAtPath<TestContext>("Assets/Editor/Context/TestContext.asset");
         }
 
         [Test]
@@ -196,6 +212,45 @@ namespace BeauData.Editor
             CustomSerializerWrapper a = Serializer.Read<CustomSerializerWrapper>(serialized);
 
             Assert.IsInstanceOf(typeof(CustomSerializerWrapper), a);
+        }
+
+        [Test]
+        static public void AssetReferencesCanBeSerializedAndDeserialized()
+        {
+            AssetRefTest test = new AssetRefTest();
+            test.SomeVal = TestContext.sprites[2];
+
+            string serialized = Serializer.Write(test, OutputOptions.None, Serializer.Format.Binary, TestContext);
+
+            AssetRefTest loaded = Serializer.Read<AssetRefTest>(serialized, Serializer.Format.AutoDetect, TestContext);
+            Assert.AreEqual(TestContext.sprites[2], loaded.SomeVal);
+        }
+
+        [Test]
+        static public void SizesOfEachSerializerType()
+        {
+            BenchmarkMemory<BinarySerializer>();
+            BenchmarkMemory<JSONSerializer>();
+            BenchmarkMemory<XMLSerializer>();
+            BenchmarkMemory<GZIPSerializer>();
+        }
+
+        static private void BenchmarkMemory<T>(int iterations = 1000) where T : class, new()
+        {
+            // prewarm
+            T newT = new T();
+            newT = newT ?? null;
+
+            T[] arr = new T[iterations];
+            GC.Collect();
+            long firstMemory = GC.GetTotalMemory(true);
+            for (int i = 0; i < iterations; ++i)
+            {
+                arr[i] = new T();
+            }
+            long secondMemory = GC.GetTotalMemory(false);
+            long totalMemory = (secondMemory - firstMemory) / iterations;
+            Debug.Log(string.Format("SizeOf {0}: {1}", typeof(T).FullName, EditorUtility.FormatBytes(totalMemory)));
         }
     }
 }

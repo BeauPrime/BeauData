@@ -213,8 +213,6 @@ namespace BeauData
                     }
                     entries.Sort();
 
-                    bool bUsePrefix = registries.Count > 1;
-
                     m_Options = new FourCC[entries.Count + 1];
                     m_Content = new GUIContent[entries.Count + 1];
 

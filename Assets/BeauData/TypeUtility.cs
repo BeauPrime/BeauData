@@ -55,8 +55,12 @@ namespace BeauData
             if (!s_ConstructorsSystem.TryGetValue(typeKey, out constructor))
                 constructor = s_ConstructorsSystem[typeKey] = inType.GetConstructor(Type.EmptyTypes);
             if (constructor == null)
+            {
                 UnityEngine.Debug.LogError("[BeauData] Could not find empty constructor for type '" + inType.FullName + "'");
-            return constructor?.Invoke(null);
+                return null;
+            }
+            
+            return constructor.Invoke(null);
         }
 
         /// <summary>
