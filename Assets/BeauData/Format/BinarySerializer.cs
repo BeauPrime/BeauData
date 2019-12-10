@@ -53,12 +53,25 @@ namespace BeauData.Format
         protected struct FrameData
         {
             public FieldType Type;
-            public object Value;
 
-            public void Set(FieldType inType, object inValue = null)
+            public Boolean Bool;
+            public Byte Byte;
+            public Double Double;
+            public Int16 Int16;
+            public Int32 Int32;
+            public Int64 Int64;
+            public Single Single;
+            public String String;
+            public UInt16 UInt16;
+            public UInt32 UInt32;
+            public UInt64 UInt64;
+            public Byte[] ByteArray;
+            public Guid Guid;
+            public FourCC FourCC;
+
+            public void Set(FieldType inType)
             {
                 Type = inType;
-                Value = inValue;
             }
         }
 
@@ -107,144 +120,70 @@ namespace BeauData.Format
         {
             m_Current.Type = (FieldType) m_Reader.ReadByte();
 
-            switch (m_Current.Type)
-            {
-                case FieldType.ARRAY:
-                    m_Current.Value = m_Reader.ReadInt32();
-                    break;
-
-                case FieldType.BOOL:
-                    m_Current.Value = m_Reader.ReadBoolean();
-                    break;
-
-                case FieldType.BYTE:
-                    m_Current.Value = m_Reader.ReadByte();
-                    break;
-
-                case FieldType.DOUBLE:
-                    m_Current.Value = m_Reader.ReadDouble();
-                    break;
-
-                case FieldType.GUID:
-                    m_Current.Value = new Guid(m_Reader.ReadString());
-                    break;
-
-                case FieldType.INT16:
-                    m_Current.Value = m_Reader.ReadInt16();
-                    break;
-
-                case FieldType.INT32:
-                    m_Current.Value = m_Reader.ReadInt32();
-                    break;
-
-                case FieldType.INT64:
-                    m_Current.Value = m_Reader.ReadInt64();
-                    break;
-
-                case FieldType.SINGLE:
-                    m_Current.Value = m_Reader.ReadSingle();
-                    break;
-
-                case FieldType.STRING:
-                    m_Current.Value = m_Reader.ReadString();
-                    break;
-
-                case FieldType.UINT16:
-                    m_Current.Value = m_Reader.ReadUInt16();
-                    break;
-
-                case FieldType.UINT32:
-                    m_Current.Value = m_Reader.ReadUInt32();
-                    break;
-
-                case FieldType.UINT64:
-                    m_Current.Value = m_Reader.ReadUInt64();
-                    break;
-
-                case FieldType.FOURCC:
-                    m_Current.Value = m_Reader.ReadFourCC();
-                    break;
-
-                case FieldType.BINARY:
-                    int length = m_Reader.ReadInt32();
-                    m_Current.Value = m_Reader.ReadBytes(length);
-                    break;
-
-                case FieldType.NULL:
-                case FieldType.OBJECT:
-                    break;
-
-                default:
-                    AddErrorMessage("Unknown binary object type {0}", m_Current.Type);
-                    break;
-            }
-        }
-
-        protected void ReadNextFrameIgnoreHeader(FieldType inType)
-        {
-            m_Current.Type = inType;
+            m_Current.ByteArray = null;
+            m_Current.String = null;
 
             switch (m_Current.Type)
             {
                 case FieldType.ARRAY:
-                    m_Current.Value = m_Reader.ReadInt32();
+                    m_Current.Int32 = m_Reader.ReadInt32();
                     break;
 
                 case FieldType.BOOL:
-                    m_Current.Value = m_Reader.ReadBoolean();
+                    m_Current.Bool = m_Reader.ReadBoolean();
                     break;
 
                 case FieldType.BYTE:
-                    m_Current.Value = m_Reader.ReadByte();
+                    m_Current.Byte = m_Reader.ReadByte();
                     break;
 
                 case FieldType.DOUBLE:
-                    m_Current.Value = m_Reader.ReadDouble();
+                    m_Current.Double = m_Reader.ReadDouble();
                     break;
 
                 case FieldType.GUID:
-                    m_Current.Value = new Guid(m_Reader.ReadString());
+                    m_Current.Guid = new Guid(m_Reader.ReadString());
                     break;
 
                 case FieldType.INT16:
-                    m_Current.Value = m_Reader.ReadInt16();
+                    m_Current.Int16 = m_Reader.ReadInt16();
                     break;
 
                 case FieldType.INT32:
-                    m_Current.Value = m_Reader.ReadInt32();
+                    m_Current.Int32 = m_Reader.ReadInt32();
                     break;
 
                 case FieldType.INT64:
-                    m_Current.Value = m_Reader.ReadInt64();
+                    m_Current.Int64 = m_Reader.ReadInt64();
                     break;
 
                 case FieldType.SINGLE:
-                    m_Current.Value = m_Reader.ReadSingle();
+                    m_Current.Single = m_Reader.ReadSingle();
                     break;
 
                 case FieldType.STRING:
-                    m_Current.Value = m_Reader.ReadString();
+                    m_Current.String = m_Reader.ReadString();
                     break;
 
                 case FieldType.UINT16:
-                    m_Current.Value = m_Reader.ReadUInt16();
+                    m_Current.UInt16 = m_Reader.ReadUInt16();
                     break;
 
                 case FieldType.UINT32:
-                    m_Current.Value = m_Reader.ReadUInt32();
+                    m_Current.UInt32 = m_Reader.ReadUInt32();
                     break;
 
                 case FieldType.UINT64:
-                    m_Current.Value = m_Reader.ReadUInt64();
+                    m_Current.UInt64 = m_Reader.ReadUInt64();
                     break;
 
                 case FieldType.FOURCC:
-                    m_Current.Value = m_Reader.ReadFourCC();
+                    m_Current.FourCC = m_Reader.ReadFourCC();
                     break;
 
                 case FieldType.BINARY:
                     int length = m_Reader.ReadInt32();
-                    m_Current.Value = m_Reader.ReadBytes(length);
+                    m_Current.ByteArray = m_Reader.ReadBytes(length);
                     break;
 
                 case FieldType.NULL:
@@ -263,13 +202,7 @@ namespace BeauData.Format
             m_Writer.Write((byte) inType);
         }
 
-        protected void WriteTypeHeader<T>(FieldType inType, ref T ioData)
-        {
-            m_Current.Set(inType, ioData);
-            m_Writer.Write((byte) inType);
-        }
-
-        protected bool ReadType<T>(FieldType inType, ref T ioData)
+        protected bool ReadType<T>(FieldType inType, ref T ioData, T inValue)
         {
             if (m_Current.Type != inType)
             {
@@ -277,7 +210,7 @@ namespace BeauData.Format
                 return false;
             }
 
-            ioData = (T) m_Current.Value;
+            ioData = inValue;
             return true;
         }
 
@@ -324,7 +257,7 @@ namespace BeauData.Format
 
             if (m_Current.Type == FieldType.UINT16)
             {
-                SerializerVersion = (ushort) m_Current.Value;
+                SerializerVersion = m_Current.UInt16;
                 ReadNextFrame();
             }
         }
@@ -429,12 +362,11 @@ namespace BeauData.Format
                 AddErrorMessage("Attempting to read child count of non array type {0}", m_Current.Type);
                 return 0;
             }
-            return (int) m_Current.Value;
+            return m_Current.Int32;
         }
 
         protected override void DeclareChildCount(int inCount)
         {
-            m_Current.Value = inCount;
             m_Writer.Write(inCount);
         }
 
@@ -447,36 +379,36 @@ namespace BeauData.Format
         // Boolean
         protected override bool Read_Boolean(ref bool ioData)
         {
-            return ReadType(FieldType.BOOL, ref ioData);
+            return ReadType(FieldType.BOOL, ref ioData, m_Current.Bool);
         }
 
         protected override void Write_Boolean(ref bool ioData)
         {
-            WriteTypeHeader(FieldType.BOOL, ref ioData);
+            WriteTypeHeader(FieldType.BOOL);
             m_Writer.Write(ioData);
         }
 
         // Byte
         protected override bool Read_Byte(ref byte ioData)
         {
-            return ReadType(FieldType.BYTE, ref ioData);
+            return ReadType(FieldType.BYTE, ref ioData, m_Current.Byte);
         }
 
         protected override void Write_Byte(ref byte ioData)
         {
-            WriteTypeHeader(FieldType.BYTE, ref ioData);
+            WriteTypeHeader(FieldType.BYTE);
             m_Writer.Write(ioData);
         }
 
         // ByteArray
         protected override bool Read_ByteArray(ref byte[] ioData)
         {
-            return ReadType(FieldType.BINARY, ref ioData);
+            return ReadType(FieldType.BINARY, ref ioData, m_Current.ByteArray);
         }
 
         protected override void Write_ByteArray(ref byte[] ioData)
         {
-            WriteTypeHeader(FieldType.BINARY, ref ioData);
+            WriteTypeHeader(FieldType.BINARY);
             m_Writer.Write(ioData.Length);
             m_Writer.Write(ioData);
         }
@@ -484,132 +416,132 @@ namespace BeauData.Format
         // Double
         protected override bool Read_Double(ref double ioData)
         {
-            return ReadType(FieldType.DOUBLE, ref ioData);
+            return ReadType(FieldType.DOUBLE, ref ioData, m_Current.Double);
         }
 
         protected override void Write_Double(ref double ioData)
         {
-            WriteTypeHeader(FieldType.DOUBLE, ref ioData);
+            WriteTypeHeader(FieldType.DOUBLE);
             m_Writer.Write(ioData);
         }
 
         //GUID
         protected override bool Read_Guid(ref Guid ioData)
         {
-            return ReadType(FieldType.GUID, ref ioData);
+            return ReadType(FieldType.GUID, ref ioData, m_Current.Guid);
         }
 
         protected override void Write_Guid(ref Guid ioData)
         {
-            WriteTypeHeader(FieldType.GUID, ref ioData);
+            WriteTypeHeader(FieldType.GUID);
             m_Writer.Write(ioData.ToString());
         }
 
         // Int16
         protected override bool Read_Int16(ref short ioData)
         {
-            return ReadType(FieldType.INT16, ref ioData);
+            return ReadType(FieldType.INT16, ref ioData, m_Current.Int16);
         }
 
         protected override void Write_Int16(ref short ioData)
         {
-            WriteTypeHeader(FieldType.INT16, ref ioData);
+            WriteTypeHeader(FieldType.INT16);
             m_Writer.Write(ioData);
         }
 
         // Int32
         protected override bool Read_Int32(ref int ioData)
         {
-            return ReadType(FieldType.INT32, ref ioData);
+            return ReadType(FieldType.INT32, ref ioData, m_Current.Int32);
         }
 
         protected override void Write_Int32(ref int ioData)
         {
-            WriteTypeHeader(FieldType.INT32, ref ioData);
+            WriteTypeHeader(FieldType.INT32);
             m_Writer.Write(ioData);
         }
 
         // Int64
         protected override bool Read_Int64(ref long ioData)
         {
-            return ReadType(FieldType.INT64, ref ioData);
+            return ReadType(FieldType.INT64, ref ioData, m_Current.Int64);
         }
 
         protected override void Write_Int64(ref long ioData)
         {
-            WriteTypeHeader(FieldType.INT64, ref ioData);
+            WriteTypeHeader(FieldType.INT64);
             m_Writer.Write(ioData);
         }
 
         // Single
         protected override bool Read_Single(ref float ioData)
         {
-            return ReadType(FieldType.SINGLE, ref ioData);
+            return ReadType(FieldType.SINGLE, ref ioData, m_Current.Single);
         }
 
         protected override void Write_Single(ref float ioData)
         {
-            WriteTypeHeader(FieldType.SINGLE, ref ioData);
+            WriteTypeHeader(FieldType.SINGLE);
             m_Writer.Write(ioData);
         }
 
         // String
         protected override bool Read_String(ref string ioData)
         {
-            return ReadType(FieldType.STRING, ref ioData);
+            return ReadType(FieldType.STRING, ref ioData, m_Current.String);
         }
 
         protected override void Write_String(ref string ioData)
         {
-            WriteTypeHeader(FieldType.STRING, ref ioData);
+            WriteTypeHeader(FieldType.STRING);
             m_Writer.Write(ioData);
         }
 
         // Uint16
         protected override bool Read_UInt16(ref ushort ioData)
         {
-            return ReadType(FieldType.UINT16, ref ioData);
+            return ReadType(FieldType.UINT16, ref ioData, m_Current.UInt16);
         }
 
         protected override void Write_UInt16(ref ushort ioData)
         {
-            WriteTypeHeader(FieldType.UINT16, ref ioData);
+            WriteTypeHeader(FieldType.UINT16);
             m_Writer.Write(ioData);
         }
 
         // Uint32
         protected override bool Read_UInt32(ref uint ioData)
         {
-            return ReadType(FieldType.UINT32, ref ioData);
+            return ReadType(FieldType.UINT32, ref ioData, m_Current.UInt32);
         }
 
         protected override void Write_UInt32(ref uint ioData)
         {
-            WriteTypeHeader(FieldType.UINT32, ref ioData);
+            WriteTypeHeader(FieldType.UINT32);
             m_Writer.Write(ioData);
         }
 
         // Uint64
         protected override bool Read_UInt64(ref ulong ioData)
         {
-            return ReadType(FieldType.UINT64, ref ioData);
+            return ReadType(FieldType.UINT64, ref ioData, m_Current.UInt64);
         }
 
         protected override void Write_UInt64(ref ulong ioData)
         {
-            WriteTypeHeader(FieldType.UINT64, ref ioData);
+            WriteTypeHeader(FieldType.UINT64);
             m_Writer.Write(ioData);
         }
 
         // FourCC
         protected override bool Read_FourCC(ref FourCC ioData)
         {
-            return ReadType(FieldType.FOURCC, ref ioData);
+            return ReadType(FieldType.FOURCC, ref ioData, m_Current.FourCC);
         }
 
         protected override void Write_FourCC(ref FourCC ioData)
         {
-            WriteTypeHeader(FieldType.FOURCC, ref ioData);
+            WriteTypeHeader(FieldType.FOURCC);
             m_Writer.Write(ioData);
         }
 

@@ -103,7 +103,7 @@ namespace BeauData.Format
 
             if (m_Current.Type == FieldType.UINT16)
             {
-                SerializerVersion = (ushort) m_Current.Value;
+                SerializerVersion = m_Current.UInt16;
                 ReadNextFrame();
             }
         }

@@ -4,11 +4,17 @@ namespace BeauData
 {
     public abstract partial class Serializer
     {
+        #region Read/Write
+
         protected abstract bool Read_%TypeName%(ref %TypeName-Full% ioData);
         protected abstract void Write_%TypeName%(ref %TypeName-Full% ioData);
 
         private ReadFunc<%TypeName-Full%> Read_%TypeName%_Cached;
         private WriteFunc<%TypeName-Full%> Write_%TypeName%_Cached;
+
+        #endregion // Read/Write
+
+        #region Basic
 
         public void Serialize(string inKey, ref %TypeName-Full% ioData, FieldOptions inOptions = FieldOptions.None)
         {
@@ -58,5 +64,60 @@ namespace BeauData
                 Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
                 Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
         }
+    
+        #endregion // Basic
+
+        #region Proxy
+
+        public void %TypeName%Proxy<ProxyType>(string inKey, ref ProxyType ioData, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<%TypeName-Full%>
+        {
+            DoProxy<ProxyType, %TypeName-Full%>(inKey, ref ioData, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
+        }
+
+        public void %TypeName%Proxy<ProxyType>(string inKey, ref ProxyType ioData, ProxyType inDefault, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<%TypeName-Full%>
+        {
+            DoProxy<ProxyType, %TypeName-Full%>(inKey, ref ioData, inDefault, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
+        }
+
+        public void %TypeName%ProxyArray<ProxyType>(string inKey, ref List<ProxyType> ioArray, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<%TypeName-Full%>
+        {
+            DoProxyArray<ProxyType, %TypeName-Full%>(inKey, ref ioArray, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
+        }
+
+        public void %TypeName%ProxyArray<ProxyType>(string inKey, ref ProxyType[] ioArray, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<%TypeName-Full%>
+        {
+            DoProxyArray<ProxyType, %TypeName-Full%>(inKey, ref ioArray, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
+        }
+
+        public void %TypeName%ProxySet<ProxyType>(string inKey, ref HashSet<ProxyType> ioSet, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<%TypeName-Full%>
+        {
+            DoProxySet<ProxyType, %TypeName-Full%>(inKey, ref ioSet, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
+        }
+
+        public void %TypeName%ProxyMap<ProxyType>(string inKey, ref Dictionary<string, ProxyType> ioMap, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<%TypeName-Full%>
+        {
+            DoProxyMap<ProxyType, %TypeName-Full%>(inKey, ref ioMap, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
+        }
+
+        public void %TypeName%ProxyMap<ProxyType>(string inKey, ref Dictionary<int, ProxyType> ioMap, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<%TypeName-Full%>
+        {
+            DoProxyMap<ProxyType, %TypeName-Full%>(inKey, ref ioMap, inOptions,
+                Read_%TypeName%_Cached ?? (Read_%TypeName%_Cached = Read_%TypeName%),
+                Write_%TypeName%_Cached ?? (Write_%TypeName%_Cached = Write_%TypeName%));
+        }
+    
+        #endregion // Proxy
     }
 }

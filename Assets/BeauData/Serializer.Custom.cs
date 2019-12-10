@@ -4,48 +4,49 @@ namespace BeauData
 {
     public abstract partial class Serializer
     {
-        private bool Read_Struct<T>(ref T inObject, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool Read_Custom<T>(ref T inObject, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             int prevErrorLength = m_ErrorString.Length;
-            inObject = default(T);
+            if (inObject == null)
+                inObject = (T) TypeUtility.Instantiate(typeof(T), this);
             inSerializer(ref inObject, this);
             return m_ErrorString.Length == prevErrorLength;
         }
 
-        private void Write_Struct<T>(ref T inObject, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void Write_Custom<T>(ref T inObject, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             inSerializer(ref inObject, this);
         }
 
-        private void DoStruct<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoCustom<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             if (IsReading)
             {
-                bool bSuccess = DoReadStruct<T>(inKey, ref ioData, inOptions, inSerializer);
+                bool bSuccess = DoReadCustom<T>(inKey, ref ioData, inOptions, inSerializer);
 
                 if (!bSuccess)
                     AddErrorMessage("Unable to read struct '{0}'.", inKey);
                 return;
             }
 
-            DoWriteStruct<T>(inKey, ref ioData, inOptions, inSerializer);
+            DoWriteCustom<T>(inKey, ref ioData, inOptions, inSerializer);
         }
 
-        private void DoStruct<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoCustom<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             if (IsReading)
             {
-                bool bSuccess = DoReadStruct<T>(inKey, ref ioData, inDefault, inOptions, inSerializer);
+                bool bSuccess = DoReadCustom<T>(inKey, ref ioData, inDefault, inOptions, inSerializer);
 
                 if (!bSuccess)
                     AddErrorMessage("Unable to read struct '{0}'.", inKey);
                 return;
             }
 
-            DoWriteStruct<T>(inKey, ref ioData, inDefault, inOptions, inSerializer);
+            DoWriteCustom<T>(inKey, ref ioData, inDefault, inOptions, inSerializer);
         }
 
-        private void DoStructArray<T>(string inKey, ref List<T> ioArray, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoCustomArray<T>(string inKey, ref List<T> ioArray, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             if (IsReading)
             {
@@ -87,7 +88,7 @@ namespace BeauData
                         for (int i = 0; i < nodeCount; ++i)
                         {
                             T obj = default(T);
-                            bSuccess &= DoReadStruct(i, ref obj, FieldOptions.None, inSerializer);
+                            bSuccess &= DoReadCustom(i, ref obj, FieldOptions.None, inSerializer);
                             ioArray.Add(obj);
                         }
                     }
@@ -112,13 +113,13 @@ namespace BeauData
                 for (int i = 0; i < ioArray.Count; ++i)
                 {
                     T obj = ioArray[i];
-                    DoWriteStruct<T>(ref obj, inSerializer);
+                    DoWriteCustom<T>(ref obj, inSerializer);
                 }
                 EndArray();
             }
         }
 
-        private void DoStructArray<T>(string inKey, ref T[] ioArray, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoCustomArray<T>(string inKey, ref T[] ioArray, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             if (IsReading)
             {
@@ -156,7 +157,7 @@ namespace BeauData
                         for (int i = 0; i < nodeCount; ++i)
                         {
                             T obj = default(T);
-                            bSuccess &= DoReadStruct(i, ref obj, FieldOptions.None, inSerializer);
+                            bSuccess &= DoReadCustom(i, ref obj, FieldOptions.None, inSerializer);
                             ioArray[i] = obj;
                         }
                     }
@@ -181,13 +182,13 @@ namespace BeauData
                 for (int i = 0; i < ioArray.Length; ++i)
                 {
                     T obj = ioArray[i];
-                    DoWriteStruct<T>(ref obj, inSerializer);
+                    DoWriteCustom<T>(ref obj, inSerializer);
                 }
                 EndArray();
             }
         }
 
-        private void DoStructSet<T>(string inKey, ref HashSet<T> ioSet, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoCustomSet<T>(string inKey, ref HashSet<T> ioSet, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             if (IsReading)
             {
@@ -225,7 +226,7 @@ namespace BeauData
                         for (int i = 0; i < nodeCount; ++i)
                         {
                             T obj = default(T);
-                            bSuccess &= DoReadStruct(i, ref obj, FieldOptions.None, inSerializer);
+                            bSuccess &= DoReadCustom(i, ref obj, FieldOptions.None, inSerializer);
                             ioSet.Add(obj);
                         }
                     }
@@ -250,13 +251,13 @@ namespace BeauData
                 foreach (var item in ioSet)
                 {
                     T obj = item;
-                    DoWriteStruct<T>(ref obj, inSerializer);
+                    DoWriteCustom<T>(ref obj, inSerializer);
                 }
                 EndArray();
             }
         }
 
-        private void DoStructMap<T>(string inKey, ref Dictionary<string, T> ioMap, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoCustomMap<T>(string inKey, ref Dictionary<string, T> ioMap, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             if (IsReading)
             {
@@ -299,7 +300,7 @@ namespace BeauData
                                 bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_String_Cached ?? (Read_String_Cached = Read_String));
 
                                 T obj = default(T);
-                                bSuccess &= DoReadStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                                bSuccess &= DoReadCustom(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
 
                                 ioMap.Add(key, obj);
                             }
@@ -332,7 +333,7 @@ namespace BeauData
                     DoWrite(MAP_KEY, ref key, FieldOptions.PreferAttribute, this.Write_String);
 
                     T obj = keyValue.Value;
-                    DoWriteStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                    DoWriteCustom(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
 
                     EndObject();
                 }
@@ -340,7 +341,7 @@ namespace BeauData
             }
         }
 
-        private void DoStructMap<T>(string inKey, ref Dictionary<int, T> ioMap, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoCustomMap<T>(string inKey, ref Dictionary<int, T> ioMap, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             if (IsReading)
             {
@@ -383,7 +384,7 @@ namespace BeauData
                                 bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_Int32_Cached ?? (Read_Int32_Cached = Read_Int32));
 
                                 T obj = default(T);
-                                bSuccess &= DoReadStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                                bSuccess &= DoReadCustom(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
 
                                 ioMap.Add(key, obj);
                             }
@@ -416,7 +417,7 @@ namespace BeauData
                     DoWrite(MAP_KEY, ref key, FieldOptions.PreferAttribute, this.Write_Int32);
 
                     T obj = keyValue.Value;
-                    DoWriteStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                    DoWriteCustom(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
 
                     EndObject();
                 }
@@ -429,7 +430,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(int inIndex, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadCustom<T>(int inIndex, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             bool bSuccess = BeginReadObject(inIndex);
 
@@ -452,7 +453,7 @@ namespace BeauData
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                bSuccess &= Read_Custom(ref ioData, inSerializer);
             }
             EndObject();
 
@@ -462,7 +463,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(int inIndex, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadCustom<T>(int inIndex, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             bool bSuccess = BeginReadObject(inIndex);
 
@@ -473,7 +474,7 @@ namespace BeauData
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                bSuccess &= Read_Custom(ref ioData, inSerializer);
             }
             EndObject();
 
@@ -483,7 +484,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadCustom<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             bool bSuccess = BeginReadObject(inKey);
 
@@ -506,7 +507,7 @@ namespace BeauData
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                bSuccess &= Read_Custom(ref ioData, inSerializer);
             }
             EndObject();
 
@@ -516,7 +517,7 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadCustom<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
             bool bSuccess = BeginReadObject(inKey);
 
@@ -527,7 +528,7 @@ namespace BeauData
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                bSuccess &= Read_Custom(ref ioData, inSerializer);
             }
             EndObject();
 
@@ -537,23 +538,30 @@ namespace BeauData
         /// <summary>
         /// Writes an object onto the current array.
         /// </summary>
-        private void DoWriteStruct<T>(ref T ioData, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoWriteCustom<T>(ref T ioData, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
-            BeginWriteObject();
-            Write_Struct(ref ioData, inSerializer);
-            EndObject();
-        }
-
-        /// <summary>
-        /// Writes an object onto the current array.
-        /// </summary>
-        private void DoWriteStruct<T>(ref T ioData, T inDefault, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
-        {
-            if (!EqualityComparer<T>.Default.Equals(ioData, inDefault))
+            if (ioData != null)
             {
                 BeginWriteObject();
-                Write_Struct(ref ioData, inSerializer);
-                EndObject();
+                Write_Custom(ref ioData, inSerializer);
+                EndValue();
+            }
+            else
+            {
+                WriteNull();
+            }
+        }
+
+        /// <summary>
+        /// Writes an object onto the current array.
+        /// </summary>
+        private void DoWriteCustom<T>(ref T ioData, T inDefault, TypeUtility.TypeSerializerDelegate<T> inSerializer)
+        {
+            if (ioData != null && !ioData.Equals(inDefault))
+            {
+                BeginWriteObject();
+                Write_Custom(ref ioData, inSerializer);
+                EndValue();
             }
             else
             {
@@ -564,23 +572,30 @@ namespace BeauData
         /// <summary>
         /// Writes an object into the current object.
         /// </summary>
-        private void DoWriteStruct<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoWriteCustom<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
-            BeginWriteObject(inKey);
-            Write_Struct(ref ioData, inSerializer);
-            EndObject();
+            if (ioData != null)
+            {
+                BeginWriteObject(inKey);
+                Write_Custom(ref ioData, inSerializer);
+                EndValue();
+            }
+            else if ((inOptions & FieldOptions.Optional) == 0 || RequiresExplicitNull())
+            {
+                WriteNull(inKey);
+            }
         }
 
         /// <summary>
         /// Writes an object into the current object.
         /// </summary>
-        private void DoWriteStruct<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoWriteCustom<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer)
         {
-            if (!EqualityComparer<T>.Default.Equals(ioData, inDefault))
+            if (ioData != null && !ioData.Equals(inDefault))
             {
                 BeginWriteObject(inKey);
-                Write_Struct(ref ioData, inSerializer);
-                EndObject();
+                Write_Custom(ref ioData, inSerializer);
+                EndValue();
             }
             else if ((inOptions & FieldOptions.Optional) == 0 || RequiresExplicitNull())
             {

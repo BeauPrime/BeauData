@@ -4,39 +4,48 @@ namespace BeauData
 {
     public abstract partial class Serializer
     {
+        static private TypeUtility.TypeSerializerDelegate<UnityEngine.Bounds> Serialize_Bounds_Cached;
+
         public void Serialize(string inKey, ref UnityEngine.Bounds ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStruct<UnityEngine.Bounds>(inKey, ref ioData, inOptions, Serialize_Bounds);
+            DoStruct<UnityEngine.Bounds>(inKey, ref ioData, inOptions,
+                Serialize_Bounds_Cached ?? (Serialize_Bounds_Cached = Serialize_Bounds));
         }
 
         public void Serialize(string inKey, ref UnityEngine.Bounds ioData, UnityEngine.Bounds inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStruct<UnityEngine.Bounds>(inKey, ref ioData, inDefault, inOptions, Serialize_Bounds);
+            DoStruct<UnityEngine.Bounds>(inKey, ref ioData, inDefault, inOptions,
+                Serialize_Bounds_Cached ?? (Serialize_Bounds_Cached = Serialize_Bounds));
         }
 
         public void Array(string inKey, ref List<UnityEngine.Bounds> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructArray<UnityEngine.Bounds>(inKey, ref ioArray, inOptions, Serialize_Bounds);
+            DoStructArray<UnityEngine.Bounds>(inKey, ref ioArray, inOptions,
+                Serialize_Bounds_Cached ?? (Serialize_Bounds_Cached = Serialize_Bounds));
         }
 
         public void Array(string inKey, ref UnityEngine.Bounds[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructArray<UnityEngine.Bounds>(inKey, ref ioArray, inOptions, Serialize_Bounds);
+            DoStructArray<UnityEngine.Bounds>(inKey, ref ioArray, inOptions,
+                Serialize_Bounds_Cached ?? (Serialize_Bounds_Cached = Serialize_Bounds));
         }
 
         public void Set(string inKey, ref HashSet<UnityEngine.Bounds> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructSet<UnityEngine.Bounds>(inKey, ref ioSet, inOptions, Serialize_Bounds);
+            DoStructSet<UnityEngine.Bounds>(inKey, ref ioSet, inOptions,
+                Serialize_Bounds_Cached ?? (Serialize_Bounds_Cached = Serialize_Bounds));
         }
 
         public void Map(string inKey, ref Dictionary<string, UnityEngine.Bounds> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructMap<UnityEngine.Bounds>(inKey, ref ioMap, inOptions, Serialize_Bounds);
+            DoStructMap<UnityEngine.Bounds>(inKey, ref ioMap, inOptions,
+                Serialize_Bounds_Cached ?? (Serialize_Bounds_Cached = Serialize_Bounds));
         }
 
         public void Map(string inKey, ref Dictionary<int, UnityEngine.Bounds> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructMap<UnityEngine.Bounds>(inKey, ref ioMap, inOptions, Serialize_Bounds);
+            DoStructMap<UnityEngine.Bounds>(inKey, ref ioMap, inOptions,
+                Serialize_Bounds_Cached ?? (Serialize_Bounds_Cached = Serialize_Bounds));
         }
     }
 }

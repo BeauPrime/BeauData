@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using BeauData.Format;
 using NUnit.Framework;
@@ -70,6 +71,62 @@ namespace BeauData.Editor
             void ISerializedObject.Serialize(Serializer ioSerializer)
             {
                 ioSerializer.AssetRef("someVal", ref SomeVal);
+            }
+        }
+
+        private struct TestSerializedStruct : ISerializedObject
+        {
+            public int Value;
+
+            void ISerializedObject.Serialize(Serializer ioSerializer)
+            {
+                ioSerializer.Serialize("value", ref Value);
+            }
+        }
+
+        private class TestSerializedStructWrapper : ISerializedObject
+        {
+            public TestSerializedStruct StructValue;
+
+            void ISerializedObject.Serialize(Serializer ioSerializer)
+            {
+                ioSerializer.Object("structValue", ref StructValue);
+            }
+        }
+
+        private struct IntProxyStruct : ISerializedProxy<int>
+        {
+            public int Value;
+
+            public IntProxyStruct(int inValue)
+            {
+                Value = inValue;
+            }
+
+            int ISerializedProxy<int>.GetProxyValue(ISerializerContext inContext)
+            {
+                return Value;
+            }
+
+            void ISerializedProxy<int>.SetProxyValue(int inValue, ISerializerContext inContext)
+            {
+                Value = inValue;
+            }
+        }
+
+        private class IntProxyTest : ISerializedObject
+        {
+            public IntProxyStruct IntProxy;
+            public IntProxyStruct[] Array;
+            public HashSet<IntProxyStruct> Set;
+            public Dictionary<string, IntProxyStruct> Map;
+
+            void ISerializedObject.Serialize(Serializer ioSerializer)
+            {
+                ioSerializer.Int32Proxy("intProxy", ref IntProxy);
+                ioSerializer.Int32ProxyArray("array", ref Array);
+                ioSerializer.Int32ProxySet("set", ref Set);
+                ioSerializer.Int32ProxyMap("map", ref Map);
             }
         }
 
@@ -215,6 +272,19 @@ namespace BeauData.Editor
         }
 
         [Test]
+        static public void AStructCanBeSerializedAndDeserialized()
+        {
+            TestSerializedStructWrapper testClass = new TestSerializedStructWrapper();
+            testClass.StructValue.Value = 5;
+
+            string serialized = Serializer.Write<TestSerializedStructWrapper>(testClass, OutputOptions.None, Serializer.Format.JSON);
+
+            TestSerializedStructWrapper a = Serializer.Read<TestSerializedStructWrapper>(serialized);
+
+            Assert.AreEqual(5, testClass.StructValue.Value);
+        }
+
+        [Test]
         static public void AssetReferencesCanBeSerializedAndDeserialized()
         {
             AssetRefTest test = new AssetRefTest();
@@ -224,6 +294,22 @@ namespace BeauData.Editor
 
             AssetRefTest loaded = Serializer.Read<AssetRefTest>(serialized, Serializer.Format.AutoDetect, TestContext);
             Assert.AreEqual(TestContext.sprites[2], loaded.SomeVal);
+        }
+
+        [Test]
+        static public void ProxyValuesCanBeSerializedAndDeserialized()
+        {
+            IntProxyTest proxyTest = new IntProxyTest();
+            proxyTest.IntProxy.Value = 5;
+            proxyTest.Array = new IntProxyStruct[] { new IntProxyStruct(5), new IntProxyStruct(2), new IntProxyStruct(3) };
+
+            string serialized = Serializer.Write(proxyTest, OutputOptions.None, Serializer.Format.JSON);
+            Debug.Log(serialized);
+
+            proxyTest = Serializer.Read<IntProxyTest>(serialized);
+            Assert.AreEqual(5, proxyTest.IntProxy.Value);
+            Assert.AreEqual(3, proxyTest.Array.Length);
+            Assert.AreEqual(2, proxyTest.Array[1].Value);
         }
 
         [Test]

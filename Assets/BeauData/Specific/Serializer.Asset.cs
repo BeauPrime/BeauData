@@ -65,7 +65,7 @@ namespace BeauData
                     }
                 }
             }
-            EndObject();
+            EndValue();
 
             return bSuccess;
         }
@@ -118,7 +118,7 @@ namespace BeauData
                     }
                 }
             }
-            EndObject();
+            EndValue();
 
             return bSuccess;
         }

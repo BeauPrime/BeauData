@@ -25,8 +25,7 @@ namespace BeauData.Editor
             typeof(UInt16),
             typeof(UInt32),
             typeof(UInt64),
-            typeof(FourCC),
-            typeof(Byte[])
+            typeof(FourCC)
         };
 
         static private readonly Type[] STRUCT_TYPES = new Type[]
@@ -105,7 +104,7 @@ namespace BeauData.Editor
             if (inType.IsArray)
             {
                 name = inType.GetElementType().Name + "Array";
-                fullname = inType.GetElementType().FullName + "Array";
+                fullname = inType.GetElementType().FullName + "[]";
             }
 
             outName = name;

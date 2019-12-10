@@ -4,39 +4,48 @@ namespace BeauData
 {
     public abstract partial class Serializer
     {
+        static private TypeUtility.TypeSerializerDelegate<%TypeName-Full%> Serialize_%TypeName%_Cached;
+
         public void Serialize(string inKey, ref %TypeName-Full% ioData, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStruct<%TypeName-Full%>(inKey, ref ioData, inOptions, Serialize_%TypeName%);
+            DoStruct<%TypeName-Full%>(inKey, ref ioData, inOptions,
+                Serialize_%TypeName%_Cached ?? (Serialize_%TypeName%_Cached = Serialize_%TypeName%));
         }
 
         public void Serialize(string inKey, ref %TypeName-Full% ioData, %TypeName-Full% inDefault, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStruct<%TypeName-Full%>(inKey, ref ioData, inDefault, inOptions, Serialize_%TypeName%);
+            DoStruct<%TypeName-Full%>(inKey, ref ioData, inDefault, inOptions,
+                Serialize_%TypeName%_Cached ?? (Serialize_%TypeName%_Cached = Serialize_%TypeName%));
         }
 
         public void Array(string inKey, ref List<%TypeName-Full%> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructArray<%TypeName-Full%>(inKey, ref ioArray, inOptions, Serialize_%TypeName%);
+            DoStructArray<%TypeName-Full%>(inKey, ref ioArray, inOptions,
+                Serialize_%TypeName%_Cached ?? (Serialize_%TypeName%_Cached = Serialize_%TypeName%));
         }
 
         public void Array(string inKey, ref %TypeName-Full%[] ioArray, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructArray<%TypeName-Full%>(inKey, ref ioArray, inOptions, Serialize_%TypeName%);
+            DoStructArray<%TypeName-Full%>(inKey, ref ioArray, inOptions,
+                Serialize_%TypeName%_Cached ?? (Serialize_%TypeName%_Cached = Serialize_%TypeName%));
         }
 
         public void Set(string inKey, ref HashSet<%TypeName-Full%> ioSet, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructSet<%TypeName-Full%>(inKey, ref ioSet, inOptions, Serialize_%TypeName%);
+            DoStructSet<%TypeName-Full%>(inKey, ref ioSet, inOptions,
+                Serialize_%TypeName%_Cached ?? (Serialize_%TypeName%_Cached = Serialize_%TypeName%));
         }
 
         public void Map(string inKey, ref Dictionary<string, %TypeName-Full%> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructMap<%TypeName-Full%>(inKey, ref ioMap, inOptions, Serialize_%TypeName%);
+            DoStructMap<%TypeName-Full%>(inKey, ref ioMap, inOptions,
+                Serialize_%TypeName%_Cached ?? (Serialize_%TypeName%_Cached = Serialize_%TypeName%));
         }
 
         public void Map(string inKey, ref Dictionary<int, %TypeName-Full%> ioMap, FieldOptions inOptions = FieldOptions.None)
         {
-            DoStructMap<%TypeName-Full%>(inKey, ref ioMap, inOptions, Serialize_%TypeName%);
+            DoStructMap<%TypeName-Full%>(inKey, ref ioMap, inOptions,
+                Serialize_%TypeName%_Cached ?? (Serialize_%TypeName%_Cached = Serialize_%TypeName%));
         }
     }
 }

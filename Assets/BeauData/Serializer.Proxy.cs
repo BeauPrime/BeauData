@@ -4,48 +4,38 @@ namespace BeauData
 {
     public abstract partial class Serializer
     {
-        private bool Read_Struct<T>(ref T inObject, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
-        {
-            int prevErrorLength = m_ErrorString.Length;
-            inObject = default(T);
-            inSerializer(ref inObject, this);
-            return m_ErrorString.Length == prevErrorLength;
-        }
-
-        private void Write_Struct<T>(ref T inObject, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
-        {
-            inSerializer(ref inObject, this);
-        }
-
-        private void DoStruct<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoProxy<ProxyType, InnerType>(string inKey, ref ProxyType ioData, FieldOptions inOptions, ReadFunc<InnerType> inReader, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
             if (IsReading)
             {
-                bool bSuccess = DoReadStruct<T>(inKey, ref ioData, inOptions, inSerializer);
+                bool bSuccess = DoReadProxy<ProxyType, InnerType>(inKey, ref ioData, inOptions, inReader);
 
                 if (!bSuccess)
-                    AddErrorMessage("Unable to read struct '{0}'.", inKey);
+                    AddErrorMessage("Unable to read proxy '{0}'.", inKey);
                 return;
             }
 
-            DoWriteStruct<T>(inKey, ref ioData, inOptions, inSerializer);
+            DoWriteProxy<ProxyType, InnerType>(inKey, ref ioData, inOptions, inWriter);
         }
 
-        private void DoStruct<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoProxy<ProxyType, InnerType>(string inKey, ref ProxyType ioData, ProxyType inDefault, FieldOptions inOptions, ReadFunc<InnerType> inReader, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
             if (IsReading)
             {
-                bool bSuccess = DoReadStruct<T>(inKey, ref ioData, inDefault, inOptions, inSerializer);
+                bool bSuccess = DoReadProxy<ProxyType, InnerType>(inKey, ref ioData, inDefault, inOptions, inReader);
 
                 if (!bSuccess)
-                    AddErrorMessage("Unable to read struct '{0}'.", inKey);
+                    AddErrorMessage("Unable to read proxy '{0}'.", inKey);
                 return;
             }
 
-            DoWriteStruct<T>(inKey, ref ioData, inDefault, inOptions, inSerializer);
+            DoWriteProxy<ProxyType, InnerType>(inKey, ref ioData, inDefault, inOptions, inWriter);
         }
 
-        private void DoStructArray<T>(string inKey, ref List<T> ioArray, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoProxyArray<ProxyType, InnerType>(string inKey, ref List<ProxyType> ioArray, FieldOptions inOptions, ReadFunc<InnerType> inReader, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
             if (IsReading)
             {
@@ -82,12 +72,12 @@ namespace BeauData
                                 ioArray.Capacity = nodeCount;
                         }
                         else
-                            ioArray = new List<T>(nodeCount);
+                            ioArray = new List<ProxyType>(nodeCount);
 
                         for (int i = 0; i < nodeCount; ++i)
                         {
-                            T obj = default(T);
-                            bSuccess &= DoReadStruct(i, ref obj, FieldOptions.None, inSerializer);
+                            ProxyType obj = default(ProxyType);
+                            bSuccess &= DoReadProxy(i, ref obj, FieldOptions.None, inReader);
                             ioArray.Add(obj);
                         }
                     }
@@ -111,14 +101,15 @@ namespace BeauData
                 DeclareChildCount(ioArray.Count);
                 for (int i = 0; i < ioArray.Count; ++i)
                 {
-                    T obj = ioArray[i];
-                    DoWriteStruct<T>(ref obj, inSerializer);
+                    ProxyType obj = ioArray[i];
+                    DoWriteProxy(ref obj, inWriter);
                 }
                 EndArray();
             }
         }
 
-        private void DoStructArray<T>(string inKey, ref T[] ioArray, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoProxyArray<ProxyType, InnerType>(string inKey, ref ProxyType[] ioArray, FieldOptions inOptions, ReadFunc<InnerType> inReader, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
             if (IsReading)
             {
@@ -151,12 +142,12 @@ namespace BeauData
                         if (ioArray != null)
                             System.Array.Resize(ref ioArray, nodeCount);
                         else
-                            ioArray = new T[nodeCount];
+                            ioArray = new ProxyType[nodeCount];
 
                         for (int i = 0; i < nodeCount; ++i)
                         {
-                            T obj = default(T);
-                            bSuccess &= DoReadStruct(i, ref obj, FieldOptions.None, inSerializer);
+                            ProxyType obj = default(ProxyType);
+                            bSuccess &= DoReadProxy(i, ref obj, FieldOptions.None, inReader);
                             ioArray[i] = obj;
                         }
                     }
@@ -180,14 +171,15 @@ namespace BeauData
                 DeclareChildCount(ioArray.Length);
                 for (int i = 0; i < ioArray.Length; ++i)
                 {
-                    T obj = ioArray[i];
-                    DoWriteStruct<T>(ref obj, inSerializer);
+                    ProxyType obj = ioArray[i];
+                    DoWriteProxy(ref obj, inWriter);
                 }
                 EndArray();
             }
         }
 
-        private void DoStructSet<T>(string inKey, ref HashSet<T> ioSet, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoProxySet<ProxyType, InnerType>(string inKey, ref HashSet<ProxyType> ioSet, FieldOptions inOptions, ReadFunc<InnerType> inReader, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
             if (IsReading)
             {
@@ -220,12 +212,12 @@ namespace BeauData
                         if (ioSet != null)
                             ioSet.Clear();
                         else
-                            ioSet = new HashSet<T>();
+                            ioSet = new HashSet<ProxyType>();
 
                         for (int i = 0; i < nodeCount; ++i)
                         {
-                            T obj = default(T);
-                            bSuccess &= DoReadStruct(i, ref obj, FieldOptions.None, inSerializer);
+                            ProxyType obj = default(ProxyType);
+                            bSuccess &= DoReadProxy(i, ref obj, FieldOptions.None, inReader);
                             ioSet.Add(obj);
                         }
                     }
@@ -249,14 +241,15 @@ namespace BeauData
                 DeclareChildCount(ioSet.Count);
                 foreach (var item in ioSet)
                 {
-                    T obj = item;
-                    DoWriteStruct<T>(ref obj, inSerializer);
+                    ProxyType obj = item;
+                    DoWriteProxy(ref obj, inWriter);
                 }
                 EndArray();
             }
         }
 
-        private void DoStructMap<T>(string inKey, ref Dictionary<string, T> ioMap, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoProxyMap<ProxyType, InnerType>(string inKey, ref Dictionary<string, ProxyType> ioMap, FieldOptions inOptions, ReadFunc<InnerType> inReader, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
             if (IsReading)
             {
@@ -289,7 +282,7 @@ namespace BeauData
                         if (ioMap != null)
                             ioMap.Clear();
                         else
-                            ioMap = new Dictionary<string, T>(nodeCount);
+                            ioMap = new Dictionary<string, ProxyType>(nodeCount);
 
                         for (int i = 0; i < nodeCount; ++i)
                         {
@@ -298,8 +291,8 @@ namespace BeauData
                                 string key = null;
                                 bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_String_Cached ?? (Read_String_Cached = Read_String));
 
-                                T obj = default(T);
-                                bSuccess &= DoReadStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                                ProxyType obj = default(ProxyType);
+                                bSuccess &= DoReadProxy(MAP_VALUE, ref obj, FieldOptions.None, inReader);
 
                                 ioMap.Add(key, obj);
                             }
@@ -331,8 +324,8 @@ namespace BeauData
                     string key = keyValue.Key;
                     DoWrite(MAP_KEY, ref key, FieldOptions.PreferAttribute, this.Write_String);
 
-                    T obj = keyValue.Value;
-                    DoWriteStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                    ProxyType obj = keyValue.Value;
+                    DoWriteProxy(MAP_VALUE, ref obj, FieldOptions.None, inWriter);
 
                     EndObject();
                 }
@@ -340,7 +333,8 @@ namespace BeauData
             }
         }
 
-        private void DoStructMap<T>(string inKey, ref Dictionary<int, T> ioMap, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoProxyMap<ProxyType, InnerType>(string inKey, ref Dictionary<int, ProxyType> ioMap, FieldOptions inOptions, ReadFunc<InnerType> inReader, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
             if (IsReading)
             {
@@ -373,7 +367,7 @@ namespace BeauData
                         if (ioMap != null)
                             ioMap.Clear();
                         else
-                            ioMap = new Dictionary<int, T>(nodeCount);
+                            ioMap = new Dictionary<int, ProxyType>(nodeCount);
 
                         for (int i = 0; i < nodeCount; ++i)
                         {
@@ -382,8 +376,8 @@ namespace BeauData
                                 int key = default(int);
                                 bSuccess &= DoRead(MAP_KEY, ref key, FieldOptions.None, Read_Int32_Cached ?? (Read_Int32_Cached = Read_Int32));
 
-                                T obj = default(T);
-                                bSuccess &= DoReadStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                                ProxyType obj = default(ProxyType);
+                                bSuccess &= DoReadProxy(MAP_VALUE, ref obj, FieldOptions.None, inReader);
 
                                 ioMap.Add(key, obj);
                             }
@@ -415,8 +409,8 @@ namespace BeauData
                     int key = keyValue.Key;
                     DoWrite(MAP_KEY, ref key, FieldOptions.PreferAttribute, this.Write_Int32);
 
-                    T obj = keyValue.Value;
-                    DoWriteStruct(MAP_VALUE, ref obj, FieldOptions.None, inSerializer);
+                    ProxyType obj = keyValue.Value;
+                    DoWriteProxy(MAP_VALUE, ref obj, FieldOptions.None, inWriter);
 
                     EndObject();
                 }
@@ -429,15 +423,16 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(int inIndex, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadProxy<ProxyType, InnerType>(int inIndex, ref ProxyType ioData, FieldOptions inOptions, ReadFunc<InnerType> inReader)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            bool bSuccess = BeginReadObject(inIndex);
+            bool bSuccess = BeginReadValue(inIndex);
 
             if (IsMissing())
             {
                 if ((inOptions & FieldOptions.Optional) != 0)
                 {
-                    ioData = default(T);
+                    ioData = default(ProxyType);
                     bSuccess = true;
                 }
                 else
@@ -447,14 +442,24 @@ namespace BeauData
             }
             else if (IsNull())
             {
-                ioData = default(T);
+                ioData = default(ProxyType);
                 bSuccess = true;
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                InnerType innerData = default(InnerType);
+                if (inReader(ref innerData))
+                {
+                    ISerializedProxy<InnerType> proxy = ioData;
+                    proxy.SetProxyValue(innerData, Context);
+                    ioData = (ProxyType) proxy;
+                }
+                else
+                {
+                    bSuccess = false;
+                }
             }
-            EndObject();
+            EndValue();
 
             return bSuccess;
         }
@@ -462,9 +467,10 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(int inIndex, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadProxy<ProxyType, InnerType>(int inIndex, ref ProxyType ioData, ProxyType inDefault, FieldOptions inOptions, ReadFunc<InnerType> inReader)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            bool bSuccess = BeginReadObject(inIndex);
+            bool bSuccess = BeginReadValue(inIndex);
 
             if (IsMissing() || IsNull())
             {
@@ -473,9 +479,19 @@ namespace BeauData
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                InnerType innerData = default(InnerType);
+                if (inReader(ref innerData))
+                {
+                    ISerializedProxy<InnerType> proxy = ioData;
+                    proxy.SetProxyValue(innerData, Context);
+                    ioData = (ProxyType) proxy;
+                }
+                else
+                {
+                    bSuccess = false;
+                }
             }
-            EndObject();
+            EndValue();
 
             return bSuccess;
         }
@@ -483,15 +499,16 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadProxy<ProxyType, InnerType>(string inKey, ref ProxyType ioData, FieldOptions inOptions, ReadFunc<InnerType> inReader)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            bool bSuccess = BeginReadObject(inKey);
+            bool bSuccess = BeginReadValue(inKey);
 
             if (IsMissing())
             {
                 if ((inOptions & FieldOptions.Optional) != 0)
                 {
-                    ioData = default(T);
+                    ioData = default(ProxyType);
                     bSuccess = true;
                 }
                 else
@@ -501,14 +518,24 @@ namespace BeauData
             }
             else if (IsNull())
             {
-                ioData = default(T);
+                ioData = default(ProxyType);
                 bSuccess = true;
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                InnerType innerData = default(InnerType);
+                if (inReader(ref innerData))
+                {
+                    ISerializedProxy<InnerType> proxy = ioData;
+                    proxy.SetProxyValue(innerData, Context);
+                    ioData = (ProxyType) proxy;
+                }
+                else
+                {
+                    bSuccess = false;
+                }
             }
-            EndObject();
+            EndValue();
 
             return bSuccess;
         }
@@ -516,9 +543,10 @@ namespace BeauData
         /// <summary>
         /// Reads an object from the current node.
         /// </summary>
-        private bool DoReadStruct<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private bool DoReadProxy<ProxyType, InnerType>(string inKey, ref ProxyType ioData, ProxyType inDefault, FieldOptions inOptions, ReadFunc<InnerType> inReader)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            bool bSuccess = BeginReadObject(inKey);
+            bool bSuccess = BeginReadValue(inKey);
 
             if (IsMissing() || IsNull())
             {
@@ -527,9 +555,19 @@ namespace BeauData
             }
             else
             {
-                bSuccess &= Read_Struct(ref ioData, inSerializer);
+                InnerType innerData = default(InnerType);
+                if (inReader(ref innerData))
+                {
+                    ISerializedProxy<InnerType> proxy = ioData;
+                    proxy.SetProxyValue(innerData, Context);
+                    ioData = (ProxyType) proxy;
+                }
+                else
+                {
+                    bSuccess = false;
+                }
             }
-            EndObject();
+            EndValue();
 
             return bSuccess;
         }
@@ -537,23 +575,27 @@ namespace BeauData
         /// <summary>
         /// Writes an object onto the current array.
         /// </summary>
-        private void DoWriteStruct<T>(ref T ioData, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoWriteProxy<ProxyType, InnerType>(ref ProxyType ioData, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            BeginWriteObject();
-            Write_Struct(ref ioData, inSerializer);
-            EndObject();
+            BeginWriteValue();
+            InnerType innerData = ioData.GetProxyValue(Context);
+            inWriter(ref innerData);
+            EndValue();
         }
 
         /// <summary>
         /// Writes an object onto the current array.
         /// </summary>
-        private void DoWriteStruct<T>(ref T ioData, T inDefault, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoWriteProxy<ProxyType, InnerType>(ref ProxyType ioData, ProxyType inDefault, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            if (!EqualityComparer<T>.Default.Equals(ioData, inDefault))
+            if (!EqualityComparer<ProxyType>.Default.Equals(ioData, inDefault))
             {
-                BeginWriteObject();
-                Write_Struct(ref ioData, inSerializer);
-                EndObject();
+                BeginWriteValue();
+                InnerType innerData = ioData.GetProxyValue(Context);
+                inWriter(ref innerData);
+                EndValue();
             }
             else
             {
@@ -564,23 +606,27 @@ namespace BeauData
         /// <summary>
         /// Writes an object into the current object.
         /// </summary>
-        private void DoWriteStruct<T>(string inKey, ref T ioData, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoWriteProxy<ProxyType, InnerType>(string inKey, ref ProxyType ioData, FieldOptions inOptions, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            BeginWriteObject(inKey);
-            Write_Struct(ref ioData, inSerializer);
-            EndObject();
+            BeginWriteValue(inKey, inOptions);
+            InnerType innerData = ioData.GetProxyValue(Context);
+            inWriter(ref innerData);
+            EndValue();
         }
 
         /// <summary>
         /// Writes an object into the current object.
         /// </summary>
-        private void DoWriteStruct<T>(string inKey, ref T ioData, T inDefault, FieldOptions inOptions, TypeUtility.TypeSerializerDelegate<T> inSerializer) where T : struct
+        private void DoWriteProxy<ProxyType, InnerType>(string inKey, ref ProxyType ioData, ProxyType inDefault, FieldOptions inOptions, WriteFunc<InnerType> inWriter)
+        where ProxyType : struct, ISerializedProxy<InnerType>
         {
-            if (!EqualityComparer<T>.Default.Equals(ioData, inDefault))
+            if (!EqualityComparer<ProxyType>.Default.Equals(ioData, inDefault))
             {
-                BeginWriteObject(inKey);
-                Write_Struct(ref ioData, inSerializer);
-                EndObject();
+                BeginWriteValue(inKey, inOptions);
+                InnerType innerData = ioData.GetProxyValue(Context);
+                inWriter(ref innerData);
+                EndValue();
             }
             else if ((inOptions & FieldOptions.Optional) == 0 || RequiresExplicitNull())
             {

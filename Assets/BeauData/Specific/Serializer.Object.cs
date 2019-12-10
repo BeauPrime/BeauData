@@ -8,7 +8,7 @@ namespace BeauData
         private const string TYPE_KEY = "__type";
         private const string VERSION_KEY = "__version";
 
-        private bool Read_Object<T>(ref T inObject) where T : ISerializedObject
+        private bool Read_Object<T>(ref T ioObject) where T : ISerializedObject
         {
             string typeName = null;
             bool typeSuccess = DoRead(TYPE_KEY, ref typeName, null, FieldOptions.PreferAttribute,
@@ -21,9 +21,9 @@ namespace BeauData
             if (!string.IsNullOrEmpty(typeName))
                 objectType = TypeUtility.NameToType(typeName);
 
-            if (inObject == null || inObject.GetType().TypeHandle.Value != objectType.TypeHandle.Value)
+            if (ioObject == null || ioObject.GetType().TypeHandle.Value != objectType.TypeHandle.Value)
             {
-                inObject = (T) TypeUtility.Instantiate(objectType, this);
+                ioObject = (T) TypeUtility.Instantiate(objectType, this);
             }
 
             ushort version = 1;
@@ -35,14 +35,16 @@ namespace BeauData
             ushort prevVersion = ObjectVersion;
             ObjectVersion = version;
 
-            ISerializedCallbacks callback = inObject as ISerializedCallbacks;
+            ISerializedCallbacks callback = ioObject as ISerializedCallbacks;
             if (callback != null)
             {
                 PreSerialize(callback);
             }
 
             int prevErrorLength = m_ErrorString.Length;
-            inObject.Serialize(this);
+            ISerializedObject obj = ioObject;
+            obj.Serialize(this);
+            ioObject = (T) obj;
 
             ObjectVersion = prevVersion;
             return typeSuccess && versionSuccess && (m_ErrorString.Length == prevErrorLength);
@@ -133,7 +135,11 @@ namespace BeauData
                     {
                         int nodeCount = GetChildCount();
                         if (ioArray != null)
+                        {
                             ioArray.Clear();
+                            if (ioArray.Capacity < nodeCount)
+                                ioArray.Capacity = nodeCount;
+                        }
                         else
                             ioArray = new List<T>(nodeCount);
 

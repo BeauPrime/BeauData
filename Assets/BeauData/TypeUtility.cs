@@ -18,10 +18,10 @@ namespace BeauData
     /// </summary>
     static public class TypeUtility
     {
-        static private Dictionary<IntPtr, string> s_TypeToAlias = new Dictionary<IntPtr, string>();
+        static private Dictionary<long, string> s_TypeToAlias = new Dictionary<long, string>();
         static private Dictionary<string, Type> s_AliasToType = new Dictionary<string, Type>();
-        static private Dictionary<IntPtr, ConstructorInfo> s_ConstructorsSystem = new Dictionary<IntPtr, ConstructorInfo>();
-        static private Dictionary<IntPtr, Delegate> s_TypeSerializers = new Dictionary<IntPtr, Delegate>();
+        static private Dictionary<long, ConstructorInfo> s_ConstructorsSystem = new Dictionary<long, ConstructorInfo>();
+        static private Dictionary<long, Delegate> s_TypeSerializers = new Dictionary<long, Delegate>();
 
         public delegate void TypeSerializerDelegate<T>(ref T ioObject, Serializer ioSerializer);
 
@@ -36,7 +36,7 @@ namespace BeauData
         static internal string TypeToName(Type inType)
         {
             string name;
-            if (!s_TypeToAlias.TryGetValue(inType.TypeHandle.Value, out name))
+            if (!s_TypeToAlias.TryGetValue(inType.TypeHandle.Value.ToInt64(), out name))
                 name = inType.AssemblyQualifiedName;
             return name;
         }
@@ -44,13 +44,13 @@ namespace BeauData
         static internal TypeSerializerDelegate<T> CustomSerializer<T>()
         {
             Delegate serializer;
-            s_TypeSerializers.TryGetValue(typeof(T).TypeHandle.Value, out serializer);
+            s_TypeSerializers.TryGetValue(typeof(T).TypeHandle.Value.ToInt64(), out serializer);
             return (TypeSerializerDelegate<T>) serializer;
         }
 
         static internal object Instantiate(Type inType, Serializer inSerializer)
         {
-            IntPtr typeKey = inType.TypeHandle.Value;
+            Int64 typeKey = inType.TypeHandle.Value.ToInt64();
             ConstructorInfo constructor;
             if (!s_ConstructorsSystem.TryGetValue(typeKey, out constructor))
                 constructor = s_ConstructorsSystem[typeKey] = inType.GetConstructor(Type.EmptyTypes);
@@ -69,7 +69,7 @@ namespace BeauData
         static public void RegisterAlias(Type inType, string inAliasName)
         {
             s_AliasToType[inAliasName] = inType;
-            s_TypeToAlias[inType.TypeHandle.Value] = inAliasName;
+            s_TypeToAlias[inType.TypeHandle.Value.ToInt64()] = inAliasName;
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace BeauData
         {
             Type type = typeof(T);
             s_AliasToType[inAliasName] = type;
-            s_TypeToAlias[type.TypeHandle.Value] = inAliasName;
+            s_TypeToAlias[type.TypeHandle.Value.ToInt64()] = inAliasName;
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace BeauData
         static public void RegisterSerializer<T>(TypeSerializerDelegate<T> inSerializeFunction)
         {
             Type type = typeof(T);
-            s_TypeSerializers[type.TypeHandle.Value] = inSerializeFunction;
+            s_TypeSerializers[type.TypeHandle.Value.ToInt64()] = inSerializeFunction;
         }
     }
 }
