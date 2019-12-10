@@ -23,13 +23,6 @@ namespace BeauData
                 Write_ByteArray_Cached ?? (Write_ByteArray_Cached = Write_ByteArray));
         }
 
-        public void Binary(string inKey, ref System.Byte[] ioData, System.Byte[] inDefault, FieldOptions inOptions = FieldOptions.None)
-        {
-            DoSerialize<System.Byte[]>(inKey, ref ioData, inDefault, inOptions,
-                Read_ByteArray_Cached ?? (Read_ByteArray_Cached = Read_ByteArray),
-                Write_ByteArray_Cached ?? (Write_ByteArray_Cached = Write_ByteArray));
-        }
-
         public void BinaryArray(string inKey, ref List<System.Byte[]> ioArray, FieldOptions inOptions = FieldOptions.None)
         {
             DoArray<System.Byte[]>(inKey, ref ioArray, inOptions,
@@ -72,13 +65,6 @@ namespace BeauData
         public void BinaryProxy<ProxyType>(string inKey, ref ProxyType ioData, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<System.Byte[]>
         {
             DoProxy<ProxyType, System.Byte[]>(inKey, ref ioData, inOptions,
-                Read_ByteArray_Cached ?? (Read_ByteArray_Cached = Read_ByteArray),
-                Write_ByteArray_Cached ?? (Write_ByteArray_Cached = Write_ByteArray));
-        }
-
-        public void BinaryProxy<ProxyType>(string inKey, ref ProxyType ioData, ProxyType inDefault, FieldOptions inOptions = FieldOptions.None) where ProxyType : struct, ISerializedProxy<System.Byte[]>
-        {
-            DoProxy<ProxyType, System.Byte[]>(inKey, ref ioData, inDefault, inOptions,
                 Read_ByteArray_Cached ?? (Read_ByteArray_Cached = Read_ByteArray),
                 Write_ByteArray_Cached ?? (Write_ByteArray_Cached = Write_ByteArray));
         }
