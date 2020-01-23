@@ -50,6 +50,11 @@ namespace BeauData
 
         static internal object Instantiate(Type inType, Serializer inSerializer)
         {
+            if (inType.IsValueType)
+            {
+                return Activator.CreateInstance(inType);
+            }
+
             Int64 typeKey = inType.TypeHandle.Value.ToInt64();
             ConstructorInfo constructor;
             if (!s_ConstructorsSystem.TryGetValue(typeKey, out constructor))

@@ -78,6 +78,11 @@ namespace BeauData.Editor
         {
             public int Value;
 
+            public TestSerializedStruct(int value)
+            {
+                Value = value;
+            }
+
             void ISerializedObject.Serialize(Serializer ioSerializer)
             {
                 ioSerializer.Serialize("value", ref Value);
@@ -310,6 +315,16 @@ namespace BeauData.Editor
             Assert.AreEqual(5, proxyTest.IntProxy.Value);
             Assert.AreEqual(3, proxyTest.Array.Length);
             Assert.AreEqual(2, proxyTest.Array[1].Value);
+        }
+
+        [Test]
+        static public void ConstructorStructsCanBeDeserializedAsInterfaces()
+        {
+            ISerializedObject obj = new TestSerializedStruct(5);
+            string serialized = Serializer.Write(obj, OutputOptions.None, Serializer.Format.JSON);
+            ISerializedObject readTest = Serializer.Read<ISerializedObject>(serialized);
+            Assert.IsInstanceOf(typeof(TestSerializedStruct), readTest);
+            Assert.AreEqual(5, ((TestSerializedStruct) readTest).Value);
         }
 
         [Test]
