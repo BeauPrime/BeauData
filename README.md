@@ -28,7 +28,7 @@ BeauData is an object serialization and deserialization library, intended to red
 
 ### Installing BeauData
 
-Download [BeauData.unitypackage](https://github.com/FilamentGames/BeauData/raw/master/BeauData.unitypackage) from the repo. Unpack it into your project.
+Download [BeauData.unitypackage](https://github.com/BeauPrime/BeauData/raw/master/BeauData.unitypackage) from the repo. Unpack it into your project.
 
 BeauData uses the ``BeauData`` namespace. You'll need to add the statement ``using BeauData;`` to the top of any scripts using it.
 
