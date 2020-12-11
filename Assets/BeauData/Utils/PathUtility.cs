@@ -63,7 +63,7 @@ namespace BeauData
 
         /// <summary>
         /// Transforms a file path into a URL.
-        /// For use with WWW or UnityWebRequest.
+        /// For use with UnityWebRequest or WWW.
         /// </summary>
         static public string PathToURL(string inFilePath)
         {

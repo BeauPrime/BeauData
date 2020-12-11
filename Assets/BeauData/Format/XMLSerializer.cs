@@ -15,7 +15,7 @@ namespace BeauData.Format
 {
     internal sealed class XMLSerializer : Serializer
     {
-        public const string FILE_EXTENSION = "xml";
+        public const string FileExtension = "xml";
         public const string FILE_CONTENT_PREFIX = "<";
 
         private Stack<XmlNode> m_Stack = new Stack<XmlNode>();

@@ -40,18 +40,43 @@ namespace BeauData
             return inCode;
         }
 
-        static private Dictionary<IntPtr, Registry> s_Registry = new Dictionary<IntPtr, Registry>();
+        /// <summary>
+        /// Deregisters a FourCC value under the given type.
+        /// This will no longer be available for any FourCCSelector with that type.
+        /// </summary>
+        static public void Deregister(Type inType, string inCode)
+        {
+            FourCC code = FourCC.Parse(inCode);
+            Deregister(inType, inCode);
+        }
+
+        /// <summary>
+        /// Deregisters a FourCC value under the given type.
+        /// This will no longer be available for any FourCCSelector with that type.
+        /// </summary>
+        static public void Deregister(Type inType, FourCC inCode)
+        {
+            Registry r = GetRegistry(inType, false, false);
+            if (r != null)
+            {
+                r.RemoveEntry(inCode);
+            }
+        }
+
+        static private Dictionary<long, Registry> s_Registry = new Dictionary<long, Registry>();
 
         static private Registry GetRegistry(Type inType, bool inbCreate, bool inbScan)
         {
             if (inbScan)
                 ScanForRegistry();
 
+            long handle = inType.TypeHandle.Value.ToInt64();
+
             Registry registry;
-            if (!s_Registry.TryGetValue(inType.TypeHandle.Value, out registry) && inbCreate)
+            if (!s_Registry.TryGetValue(handle, out registry) && inbCreate)
             {
                 registry = new Registry();
-                s_Registry.Add(inType.TypeHandle.Value, registry);
+                s_Registry.Add(handle, registry);
             }
             return registry;
         }
@@ -72,6 +97,19 @@ namespace BeauData
                 entry = new RegistryEntry(inCode, inName, inDescription);
                 m_EntryList.Add(entry);
                 m_EntryMap.Add(inCode, entry);
+            }
+            
+            public bool RemoveEntry(FourCC inCode)
+            {
+                RegistryEntry entry;
+                if (m_EntryMap.TryGetValue(inCode, out entry))
+                {
+                    m_EntryMap.Remove(inCode);
+                    m_EntryList.Remove(entry);
+                    return true;
+                }
+                
+                return false;
             }
 
             public RegistryEntry[] CopyEntries()
@@ -181,6 +219,31 @@ namespace BeauData
         static public FourCC Register(Type inType, string inCode, string inName = null, string inDescription = null)
         {
             return FourCC.Parse(inCode);
+        }
+
+        /// <summary>
+        /// Registers a FourCC value under the given type.
+        /// This will then be available for any FourCCSelector attributes with that type.
+        /// </summary>
+        static public FourCC Register(Type inType, FourCC inCode, string inName = null, string inDescription = null)
+        {
+            return inCode;
+        }
+
+        /// <summary>
+        /// Deregisters a FourCC value under the given type.
+        /// This will no longer be available for any FourCCSelector with that type.
+        /// </summary>
+        static public void Deregister(Type inType, string inCode)
+        {
+        }
+
+        /// <summary>
+        /// Deregisters an FourCC value under the given type.
+        /// This will no longer be available for any FourCCSelector with that type.
+        /// </summary>
+        static public void Deregister(Type inType, FourCC inCode)
+        {
         }
 
         #endif // ALLOW_REGISTRY

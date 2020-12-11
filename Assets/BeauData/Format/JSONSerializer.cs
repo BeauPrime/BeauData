@@ -14,7 +14,7 @@ namespace BeauData.Format
 {
     internal sealed class JSONSerializer : Serializer
     {
-        public const string FILE_EXTENSION = "json";
+        public const string FileExtension = "json";
         public const string FILE_CONTENT_PREFIX = "{";
 
         private Stack<JSON> m_Stack = new Stack<JSON>();
@@ -377,7 +377,7 @@ namespace BeauData.Format
         internal override string AsString(OutputOptions inOptions = OutputOptions.None)
         {
             if ((inOptions & OutputOptions.Base64) != 0)
-                return m_Root.ToBase64();
+                return JSON.Binary.ToBase64(m_Root);
             if ((inOptions & OutputOptions.PrettyPrint) != 0)
                 return m_Root.ToString(3);
             return m_Root.ToString();

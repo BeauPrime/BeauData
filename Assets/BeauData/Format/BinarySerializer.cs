@@ -13,7 +13,7 @@ namespace BeauData.Format
 {
     internal class BinarySerializer : Serializer
     {
-        public const string FILE_EXTENSION = "fbin";
+        public const string FileExtension = "fbin";
         public const string FILE_CONTENT_PREFIX = "FBIN";
 
         static private readonly byte[] FILE_CONTENT_PREFIX_BYTES = new byte[]

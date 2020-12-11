@@ -491,13 +491,13 @@ namespace BeauData
                     return Format.AutoDetect;
             }
 
-            if (extension == XMLSerializer.FILE_EXTENSION)
+            if (extension == XMLSerializer.FileExtension)
                 return Format.XML;
-            else if (extension == JSONSerializer.FILE_EXTENSION)
+            else if (extension == JSONSerializer.FileExtension)
                 return Format.JSON;
-            else if (extension == BinarySerializer.FILE_EXTENSION)
+            else if (extension == BinarySerializer.FileExtension)
                 return Format.Binary;
-            else if (extension == GZIPSerializer.FILE_EXTENSION)
+            else if (extension == GZIPSerializer.FileExtension)
                 return Format.GZIP;
             else
                 return Format.AutoDetect;

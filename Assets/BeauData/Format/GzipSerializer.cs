@@ -19,7 +19,7 @@ namespace BeauData.Format
 {
     internal sealed class GZIPSerializer : BinarySerializer
     {
-        public new const string FILE_EXTENSION = "fbgz";
+        public new const string FileExtension = "fbgz";
         public new const string FILE_CONTENT_PREFIX = "FBGZ";
 
         static private readonly byte[] FILE_CONTENT_PREFIX_BYTES = new byte[]

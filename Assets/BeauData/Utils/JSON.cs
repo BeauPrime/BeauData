@@ -29,6 +29,7 @@
  * SOFTWARE.
  * 
  * * * * */
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -37,6 +38,10 @@ using System.Text;
 
 namespace BeauData
 {
+    /// <summary>
+    /// JSON node.
+    /// Supports lazy instantiation.
+    /// </summary>
     public sealed class JSON
     {
         #region Types
@@ -68,12 +73,12 @@ namespace BeauData
         private string m_StringValue;
         private JSON m_LazyParent;
 
-        private JSON(NodeType inType)
+        private JSON(NodeType inType, int inStartingCollectionSize = 0)
         {
             SetType(inType);
         }
 
-        private void SetType(NodeType inType)
+        private void SetType(NodeType inType, int inCollectionSize = 0)
         {
             if (inType == m_Type)
                 return;
@@ -124,11 +129,11 @@ namespace BeauData
 
             if (m_Type == NodeType.Array)
             {
-                m_List = new List<JSON>();
+                m_List = new List<JSON>(inCollectionSize);
             }
             else if (m_Type == NodeType.Object)
             {
-                m_Dict = new Dictionary<string, JSON>();
+                m_Dict = new Dictionary<string, JSON>(inCollectionSize);
             }
         }
 
@@ -695,86 +700,87 @@ namespace BeauData
 
         private class Parser
         {
-            private string m_Source;
-            private int m_Position;
-
-            private Stack<JSON> m_Stack;
+            private readonly Stack<JSON> m_Stack;
+            private readonly StringBuilder m_TokenBuilder;
+            private readonly char[] m_UnicodeReadChars;
+            
             private JSON m_Context;
-
-            private StringBuilder m_TokenBuilder;
             private bool m_HasToken;
             private string m_Key;
 
             private bool m_QuoteMode;
             private bool m_TokenQuoted;
 
-            public Parser(string inJSON)
-            {
-                m_Source = inJSON;
-                m_Position = 0;
+            private TextReader m_Stream;
+            private string m_Prefix;
+            private int m_PrefixLength;
+            private int m_PrefixPosition;
 
+            internal Parser()
+            {
                 m_Stack = new Stack<JSON>();
                 m_Context = null;
+                m_UnicodeReadChars = new char[4];
 
-                m_TokenBuilder = new StringBuilder();
+                m_TokenBuilder = new StringBuilder(256);
                 m_HasToken = false;
                 m_Key = null;
 
                 m_QuoteMode = m_TokenQuoted = false;
             }
 
-            private bool TokenMatches(string inToken)
+            private void ResetState()
             {
-                int length = m_TokenBuilder.Length;
-                if (length != inToken.Length)
-                    return false;
+                m_Stack.Clear();
+                m_Context = null;
 
-                while(--length >= 0)
-                    if (char.ToLowerInvariant(m_TokenBuilder[length]) != inToken[length])
-                        return false;
-
-                return true;
-            }
-
-            private void SetTokenAsKey()
-            {
-                m_Key = m_TokenBuilder.ToString();
                 m_TokenBuilder.Length = 0;
-                m_TokenQuoted = false;
                 m_HasToken = false;
-            }
-
-            private void ResetTokens()
-            {
-                m_TokenBuilder.Length = 0;
                 m_Key = null;
+
                 m_QuoteMode = m_TokenQuoted = false;
-                m_HasToken = false;
+
+                m_Stream = null;
+                m_Prefix = null;
+                m_PrefixLength = 0;
+                m_PrefixPosition = 0;
             }
 
-            public JSON Parse()
+            public JSON Parse(TextReader inStream, string inPrefix)
             {
-                while (m_Position < m_Source.Length)
+                ResetState();
+                if (inPrefix != null)
                 {
-                    ParseCharacter();
-                    ++m_Position;
+                    m_Prefix = inPrefix;
+                    m_PrefixLength = inPrefix.Length;
                 }
 
-                if (m_QuoteMode)
-                    throw new Exception("JSON parsing error: Unclosed quotation mark.");
-                if (m_Stack.Count > 0)
-                    throw new Exception("JSON parsing error: Unclosed objects or arrays.");
-                if (m_HasToken)
-                    throw new Exception("JSON parsing error: Unfinished token '" + m_TokenBuilder.ToString() + "'");
-                if (m_Key != null)
-                    throw new Exception("JSON parsing error: Unfinished token '" + m_Key + "'");
+                using(m_Stream = inStream)
+                {
+                    while (ParseCharacter()) ;
 
-                return m_Context;
+                    if (m_QuoteMode)
+                        throw new Exception("JSON parsing error: Unclosed quotation mark.");
+                    if (m_Stack.Count > 0)
+                        throw new Exception("JSON parsing error: Unclosed objects or arrays.");
+                    if (m_HasToken)
+                        throw new Exception("JSON parsing error: Unfinished token '" + m_TokenBuilder.ToString() + "'");
+                    if (m_Key != null)
+                        throw new Exception("JSON parsing error: Unfinished token '" + m_Key + "'");
+                }
+
+                JSON content = m_Context;
+                ResetState();
+                return content;
             }
 
-            private void ParseCharacter()
+            private bool ParseCharacter()
             {
-                char c = m_Source[m_Position];
+                int read = ReadChar();
+                if (read == -1)
+                    return false;
+
+                char c = (char) read;
                 switch(c)
                 {
                     case '{':
@@ -809,7 +815,7 @@ namespace BeauData
                         if (m_QuoteMode)
                             AddToToken(c);
                         else
-                            SeparateKey();
+                            SetTokenAsKey();
                         break;
 
                     case '"':
@@ -835,10 +841,13 @@ namespace BeauData
                         break;
 
                     case '\\':
-                        ++m_Position;
                         if (m_QuoteMode)
                         {
-                            c = m_Source[m_Position];
+                            read = ReadChar();
+                            if (read == -1)
+                                throw new ParseException("Escape with no corresponding character");
+
+                            c = (char) read;
                             switch(c)
                             {
                                 case 't':
@@ -858,9 +867,12 @@ namespace BeauData
                                     break;
                                 case 'u':
                                     {
-                                        string unicode = m_Source.Substring(m_Position + 1, 4);
-                                        AddToToken((char)int.Parse(unicode, NumberStyles.AllowHexSpecifier));
-                                        m_Position += 4;
+                                        int readChars = ReadBlock(m_UnicodeReadChars, 0, 4);
+                                        if (readChars < 4)
+                                            throw new ParseException("Unicode escape with less than 4 subsequent digits");
+                                        
+                                        string unicodeStr = new string(m_UnicodeReadChars);
+                                        AddToToken((char)int.Parse(unicodeStr, NumberStyles.AllowHexSpecifier, CultureUtility.InvariantNumberFormat));
                                         break;
                                     }
                                 default:
@@ -874,14 +886,47 @@ namespace BeauData
                         AddToToken(c);
                         break;
                 }
+
+                return true;
             }
+
+            #region Read
+
+            private int ReadChar()
+            {
+                if (m_PrefixPosition >= m_PrefixLength)
+                {
+                    return m_Stream != null ? m_Stream.Read() : -1;
+                }
+                return m_Prefix[m_PrefixPosition++];
+            }
+
+            private int ReadBlock(char[] ioBuffer, int inIndex, int inCount)
+            {
+                int readCount = 0;
+                while(m_PrefixPosition < m_PrefixLength && readCount < inCount)
+                {
+                    ioBuffer[inIndex + readCount++] = m_Prefix[m_PrefixPosition++];
+                }
+
+                if (readCount < inCount && m_Stream != null)
+                {
+                    readCount += m_Stream.ReadBlock(ioBuffer, readCount, inCount - readCount);
+                }
+
+                return readCount;
+            }
+
+            #endregion // Read
+
+            #region Tokens
 
             private void AddToken(NodeType inExpectedType = NodeType.Unknown)
             {
                 if (!m_HasToken)
                 {
                     if (m_Key != null)
-                        throw new Exception("JSON parsing error: Key '" + m_Key + "' does not have a corresponding value.");
+                        throw new ParseException("Key '" + m_Key + "' does not have a corresponding value.");
                     return;
                 }
 
@@ -889,7 +934,7 @@ namespace BeauData
                 {
                     NodeType actualType = m_Context.m_Type;
                     if (inExpectedType != actualType)
-                        throw new Exception("JSON parsing error: Expected " + inExpectedType + ", got " + actualType);
+                        throw new ParseException("Expected " + inExpectedType + ", got " + actualType);
                 }
 
                 if (m_TokenQuoted)
@@ -908,7 +953,7 @@ namespace BeauData
                 {
                     string token = m_TokenBuilder.ToString();
                     double number;
-                    if (double.TryParse(token, out number))
+                    if (double.TryParse(token, NumberStyles.Float, CultureUtility.InvariantNumberFormat, out number))
                         m_Context.Add(m_Key, JSON.CreateValue(number));
                     else
                         m_Context.Add(m_Key, JSON.CreateValue(token));
@@ -918,10 +963,43 @@ namespace BeauData
             private void AddToToken(char inChar)
             {
                 if (inChar == 0)
-                    throw new Exception("adding null character to token");
+                    throw new ParseException("adding null character to token");
                 m_TokenBuilder.Append(inChar);
                 m_HasToken = true;
             }
+
+            private bool TokenMatches(string inToken)
+            {
+                int length = m_TokenBuilder.Length;
+                if (length != inToken.Length)
+                    return false;
+
+                while(--length >= 0)
+                    if (char.ToLowerInvariant(m_TokenBuilder[length]) != inToken[length])
+                        return false;
+
+                return true;
+            }
+
+            private void SetTokenAsKey()
+            {
+                m_Key = m_TokenBuilder.ToString();
+                m_TokenBuilder.Length = 0;
+                m_TokenQuoted = false;
+                m_HasToken = false;
+            }
+
+            private void ResetTokens()
+            {
+                m_TokenBuilder.Length = 0;
+                m_Key = null;
+                m_QuoteMode = m_TokenQuoted = false;
+                m_HasToken = false;
+            }
+
+            #endregion // Tokens
+
+            #region Elements
 
             private void StartArray()
             {
@@ -947,17 +1025,12 @@ namespace BeauData
                 m_Context = obj;
             }
 
-            private void SeparateKey()
-            {
-                SetTokenAsKey();
-            }
-
             private void ToggleQuotes()
             {
                 if (!m_QuoteMode)
                 {
                     if (m_HasToken)
-                        throw new Exception("JSON parsing error: Multiple quotation blocks for a single token is not allowed.");
+                        throw new ParseException("Multiple quotation blocks for a single token is not allowed.");
 
                     m_QuoteMode = true;
                     m_HasToken = true;
@@ -978,7 +1051,7 @@ namespace BeauData
             private void EndObject()
             {
                 if (m_Stack.Count == 0)
-                    throw new Exception("JSON parsing error: Too many closing brackets");
+                    throw new ParseException("Too many closing brackets");
 
                 m_Stack.Pop();
 
@@ -992,7 +1065,7 @@ namespace BeauData
             private void EndArray()
             {
                 if (m_Stack.Count == 0)
-                    throw new Exception("JSON parsing error: Too many closing brackets");
+                    throw new ParseException("Too many closing brackets");
 
                 m_Stack.Pop();
 
@@ -1002,6 +1075,8 @@ namespace BeauData
                 if (m_Stack.Count > 0)
                     m_Context = m_Stack.Peek();
             }
+
+            #endregion // Elements
         }
 
         /// <summary>
@@ -1009,27 +1084,93 @@ namespace BeauData
         /// </summary>
         static public JSON Parse(string inJSON)
         {
-            Parser parser = new Parser(inJSON);
-            return parser.Parse();
+            return GetParser().Parse(null, inJSON);
         }
+
+        /// <summary>
+        /// Parses the JSON stream into an object.
+        /// </summary>
+        static public JSON Parse(Stream inStream)
+        {
+            StreamReader reader = new StreamReader(inStream);
+            return GetParser().Parse(reader, null);
+        }
+
+        /// <summary>
+        /// Parses the given prefix string and JSON stream into an object.
+        /// </summary>
+        static public JSON Parse(Stream inStream, string inPrefix)
+        {
+            StreamReader reader = new StreamReader(inStream);
+            return GetParser().Parse(reader, inPrefix);
+        }
+
+        #region Instance
+
+        [ThreadStatic] static private Parser s_ThreadParser;
+
+        static private Parser GetParser()
+        {
+            return s_ThreadParser ?? (s_ThreadParser = new Parser());
+        }
+
+        #endregion // Instance
 
         #endregion
 
         #region Stringify
 
+        #region String Builder
+
+        [ThreadStatic] static private StringBuilder s_ThreadStringBuilder;
+
+        static private StringBuilder GetStringBuilder()
+        {
+            StringBuilder builder = s_ThreadStringBuilder ?? (s_ThreadStringBuilder = new StringBuilder(512));
+            builder.Length = 0;
+            return builder;
+        }
+
+        static private string PopString(StringBuilder ioBuilder)
+        {
+            string str = ioBuilder.ToString();
+            ioBuilder.Length = 0;
+            return str;
+        }
+
+        #endregion // String Builder
+
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = GetStringBuilder();
             Stringify(builder);
-            return builder.ToString();
+            return PopString(builder);
         }
 
         public string ToString(int inIndentLevel)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = GetStringBuilder();
             Stringify(builder, 0, inIndentLevel);
-            return builder.ToString();
+            return PopString(builder);
         }
+
+        /// <summary>
+        /// Writes the JSON to the given TextWriter.
+        /// </summary>
+        public void WriteTo(TextWriter inWriter)
+        {
+            Stringify(inWriter);
+        }
+
+        /// <summary>
+        /// Writes the JSON to the given TextWriter.
+        /// </summary>
+        public void WriteTo(TextWriter inWriter, int inIndentLevel)
+        {
+            Stringify(inWriter, 0, inIndentLevel);
+        }
+
+        #region StringBuilder
 
         // Writes inline json to the StringBuilder
         private void Stringify(StringBuilder ioBuilder)
@@ -1075,7 +1216,7 @@ namespace BeauData
 
                 case NodeType.Number:
                     {
-                        ioBuilder.Append(m_NumberValue);
+                        ioBuilder.Append(m_NumberValue.ToString(CultureUtility.InvariantNumberFormat));
                         break;
                     }
 
@@ -1183,147 +1324,329 @@ namespace BeauData
             }
         }
 
+        #endregion // StringBuilder
+
+        #region Stream
+
+        // Writes inline json to the TextWriter
+        private void Stringify(TextWriter ioWriter)
+        {
+            switch (m_Type)
+            {
+                case NodeType.Array:
+                    {
+                        ioWriter.Write('[');
+                        for (int i = 0; i < m_List.Count; ++i)
+                        {
+                            if (i > 0)
+                                ioWriter.Write(',');
+                            m_List[i].Stringify(ioWriter);
+                        }
+                        ioWriter.Write(']');
+                        break;
+                    }
+
+                case NodeType.Object:
+                    {
+                        ioWriter.Write('{');
+                        bool bComma = false;
+                        foreach (var keyValue in m_Dict)
+                        {
+                            if (bComma)
+                                ioWriter.Write(',');
+                            ioWriter.Write('\"');
+                            WriteEscaped(ioWriter, keyValue.Key);
+                            ioWriter.Write('\"');
+                            ioWriter.Write(':');
+                            keyValue.Value.Stringify(ioWriter);
+                            bComma = true;
+                        }
+                        ioWriter.Write('}');
+                        break;
+                    }
+
+                case NodeType.Bool:
+                    {
+                        ioWriter.Write(m_NumberValue > 0 ? "true" : "false");
+                        break;
+                    }
+
+                case NodeType.Number:
+                    {
+                        ioWriter.Write(m_NumberValue.ToString(CultureUtility.InvariantNumberFormat));
+                        break;
+                    }
+
+                case NodeType.String:
+                    {
+                        ioWriter.Write('\"');
+                        WriteEscaped(ioWriter, m_StringValue);
+                        ioWriter.Write('\"');
+                        break;
+                    }
+
+                case NodeType.Null:
+                    {
+                        ioWriter.Write("null");
+                        break;
+                    }
+
+                default:
+                    {
+                        break;
+                    }
+            }
+        }
+
+        // Writes formatted json to the TextWriter
+        private void Stringify(TextWriter ioWriter, int inTabs, int inIndentLevel)
+        {
+            switch (m_Type)
+            {
+                case NodeType.Array:
+                    {
+                        ioWriter.Write('[');
+                        for (int i = 0; i < m_List.Count; ++i)
+                        {
+                            if (i > 0)
+                                ioWriter.Write(',');
+                            ioWriter.Write('\n');
+                            
+                            WriteChars(ioWriter, ' ', inTabs * inIndentLevel + inIndentLevel);
+                            m_List[i].Stringify(ioWriter, inTabs + 1, inIndentLevel);
+                        }
+                        ioWriter.Write('\n');
+                        WriteChars(ioWriter, ' ', inTabs * inIndentLevel);
+                        ioWriter.Write(']');
+                        break;
+                    }
+
+                case NodeType.Object:
+                    {
+                        ioWriter.Write('{');
+                        bool bComma = false;
+                        foreach (var keyValue in m_Dict)
+                        {
+                            if (bComma)
+                                ioWriter.Write(',');
+                            ioWriter.Write('\n');
+                            WriteChars(ioWriter, ' ', inTabs * inIndentLevel + inIndentLevel);
+                            ioWriter.Write('\"');
+                            WriteEscaped(ioWriter, keyValue.Key);
+                            ioWriter.Write("\": ");
+                            keyValue.Value.Stringify(ioWriter, inTabs + 1, inIndentLevel);
+                            bComma = true;
+                        }
+                        ioWriter.Write('\n');
+                        WriteChars(ioWriter, ' ', inTabs * inIndentLevel);
+                        ioWriter.Write('}');
+                        break;
+                    }
+
+                default:
+                    Stringify(ioWriter);
+                    break;
+            }
+        }
+
+        // Writes the given text with escaped characters
+        private static void WriteEscaped(TextWriter ioWriter, string inText)
+        {
+            if (inText == null)
+                return;
+                
+            for (int i = 0; i < inText.Length; ++i)
+            {
+                char c = inText[i];
+                switch (c)
+                {
+                    case '\\':
+                        ioWriter.Write("\\\\");
+                        break;
+                    case '\"':
+                        ioWriter.Write("\\\"");
+                        break;
+                    case '\n':
+                        ioWriter.Write("\\n");
+                        break;
+                    case '\r':
+                        ioWriter.Write("\\r");
+                        break;
+                    case '\t':
+                        ioWriter.Write("\\t");
+                        break;
+                    case '\b':
+                        ioWriter.Write("\\b");
+                        break;
+                    case '\f':
+                        ioWriter.Write("\\f");
+                        break;
+                    default:
+                        ioWriter.Write(c);
+                        break;
+                }
+            }
+        }
+
+        private static void WriteChars(TextWriter ioWriter, char inChar, int inCount)
+        {
+            while(--inCount >= 0)
+                ioWriter.Write(inChar);
+        }
+
+        #endregion // Stream
+
         #endregion
 
         #region Serialization
 
         /// <summary>
-        /// Returns the JSON as a Base64 string.
+        /// Binary serialization/deserialization.
         /// </summary>
-        public string ToBase64()
+        static public class Binary
         {
-            using(var stream = new MemoryStream())
+            /// <summary>
+            /// Returns the JSON as a Base64 string.
+            /// </summary>
+            static public string ToBase64(JSON inJSON)
             {
-                Serialize(stream);
-                return Convert.ToBase64String(stream.ToArray());
+                using(var stream = new MemoryStream(512))
+                {
+                    Serialize(inJSON, stream);
+                    return Convert.ToBase64String(stream.ToArray());
+                }
             }
-        }
 
-        /// <summary>
-        /// Writes the JSON in binary form into the stream.
-        /// </summary>
-        public void Serialize(Stream inStream)
-        {
-            var writer = new BinaryWriter(inStream);
-            Serialize(writer);
-        }
-
-        /// <summary>
-        /// Writes the JSON in binary form into the stream
-        /// using the given BinaryWriter.
-        /// </summary>
-        public void Serialize(BinaryWriter ioWriter)
-        {
-            ioWriter.Write((byte)m_Type);
-
-            switch (m_Type)
+            /// <summary>
+            /// Writes the JSON in binary form into the stream.
+            /// </summary>
+            static public void Serialize(JSON inJSON, Stream inStream)
             {
-                case NodeType.Object:
-                    ioWriter.Write(m_Dict.Count);
-                    foreach (var keyValue in m_Dict)
-                    {
-                        ioWriter.Write(keyValue.Key);
-                        keyValue.Value.Serialize(ioWriter);
-                    }
-                    break;
-
-                case NodeType.Array:
-                    ioWriter.Write(m_List.Count);
-                    for (int i = 0; i < m_List.Count; ++i)
-                        m_List[i].Serialize(ioWriter);
-                    break;
-
-                case NodeType.Bool:
-                    ioWriter.Write(m_NumberValue > 0);
-                    break;
-
-                case NodeType.Number:
-                    ioWriter.Write(m_NumberValue);
-                    break;
-
-                case NodeType.String:
-                    ioWriter.Write(m_StringValue);
-                    break;
+                using(var writer = new BinaryWriter(inStream))
+                {
+                    Serialize(inJSON, writer);
+                }
             }
-        }
 
-        /// <summary>
-        /// Converts from a Base64 string into a JSON object.
-        /// </summary>
-        static public JSON FromBase64(string inBase64)
-        {
-            var bytes = Convert.FromBase64String(inBase64);
-            using(var stream = new MemoryStream(bytes))
+            /// <summary>
+            /// Writes the JSON in binary form into the stream
+            /// using the given BinaryWriter.
+            /// </summary>
+            static public void Serialize(JSON inJSON, BinaryWriter ioWriter)
             {
-                stream.Position = 0;
-                return Deserialize(stream);
-            }
-        }
+                ioWriter.Write((byte)inJSON.m_Type);
 
-        /// <summary>
-        /// Reads a JSON object from the Stream.
-        /// </summary>
-        static public JSON Deserialize(Stream inStream)
-        {
-            var reader = new BinaryReader(inStream);
-            return Deserialize(reader);
-        }
-
-        /// <summary>
-        /// Reads a JSON object from the BinaryReader.
-        /// </summary>
-        static public JSON Deserialize(BinaryReader inReader)
-        {
-            NodeType type = (NodeType)inReader.ReadByte();
-            switch(type)
-            {
-                case NodeType.Object:
-                    {
-                        int count = inReader.ReadInt32();
-                        JSON obj = CreateObject();
-                        for (int i = 0; i < count; ++i)
+                switch (inJSON.m_Type)
+                {
+                    case NodeType.Object:
+                        ioWriter.Write(inJSON.m_Dict.Count);
+                        foreach (var keyValue in inJSON.m_Dict)
                         {
-                            string key = inReader.ReadString();
-                            obj.m_Dict.Add(key, Deserialize(inReader));
+                            ioWriter.Write(keyValue.Key);
+                            Serialize(keyValue.Value, ioWriter);
                         }
-                        return obj;
-                    }
+                        break;
 
-                case NodeType.Array:
-                    {
-                        int count = inReader.ReadInt32();
-                        JSON arr = CreateArray();
-                        for (int i = 0; i < count; ++i)
-                            arr.m_List.Add(Deserialize(inReader));
-                        return arr;
-                    }
+                    case NodeType.Array:
+                        ioWriter.Write(inJSON.m_List.Count);
+                        for (int i = 0; i < inJSON.m_List.Count; ++i)
+                            Serialize(inJSON.m_List[i], ioWriter);
+                        break;
 
-                case NodeType.Bool:
-                    {
-                        JSON boolNode = new JSON(NodeType.Bool);
-                        boolNode.AsBool = inReader.ReadBoolean();
-                        return boolNode;
-                    }
+                    case NodeType.Bool:
+                        ioWriter.Write(inJSON.m_NumberValue > 0);
+                        break;
 
-                case NodeType.Number:
-                    {
-                        JSON numberNode = new JSON(NodeType.Number);
-                        numberNode.AsDouble = inReader.ReadDouble();
-                        return numberNode;
-                    }
+                    case NodeType.Number:
+                        ioWriter.Write(inJSON.m_NumberValue);
+                        break;
 
-                case NodeType.String:
-                    {
-                        JSON stringNode = new JSON(NodeType.String);
-                        stringNode.AsString = inReader.ReadString();
-                        return stringNode;
-                    }
+                    case NodeType.String:
+                        ioWriter.Write(inJSON.m_StringValue);
+                        break;
+                }
+            }
 
-                default:
-                    {
-                        JSON nullNode = new JSON(NodeType.Null);
-                        return nullNode;
-                    }
+            /// <summary>
+            /// Converts from a Base64 string into a JSON object.
+            /// </summary>
+            static public JSON FromBase64(JSON inJSON, string inBase64)
+            {
+                var bytes = Convert.FromBase64String(inBase64);
+                using(var stream = new MemoryStream(bytes))
+                {
+                    stream.Position = 0;
+                    return Deserialize(stream);
+                }
+            }
+
+            /// <summary>
+            /// Reads a JSON object from the Stream.
+            /// </summary>
+            static public JSON Deserialize(Stream inStream)
+            {
+                using(var reader = new BinaryReader(inStream))
+                {
+                    return Deserialize(reader);
+                }
+            }
+
+            /// <summary>
+            /// Reads a JSON object from the BinaryReader.
+            /// </summary>
+            static public JSON Deserialize(BinaryReader inReader)
+            {
+                NodeType type = (NodeType)inReader.ReadByte();
+                switch(type)
+                {
+                    case NodeType.Object:
+                        {
+                            int count = inReader.ReadInt32();
+                            JSON obj = CreateObject();
+                            for (int i = 0; i < count; ++i)
+                            {
+                                string key = inReader.ReadString();
+                                obj.m_Dict.Add(key, Deserialize(inReader));
+                            }
+                            return obj;
+                        }
+
+                    case NodeType.Array:
+                        {
+                            int count = inReader.ReadInt32();
+                            JSON arr = CreateArray(count);
+                            for (int i = 0; i < count; ++i)
+                                arr.m_List.Add(Deserialize(inReader));
+                            return arr;
+                        }
+
+                    case NodeType.Bool:
+                        {
+                            JSON boolNode = new JSON(NodeType.Bool);
+                            boolNode.AsBool = inReader.ReadBoolean();
+                            return boolNode;
+                        }
+
+                    case NodeType.Number:
+                        {
+                            JSON numberNode = new JSON(NodeType.Number);
+                            numberNode.AsDouble = inReader.ReadDouble();
+                            return numberNode;
+                        }
+
+                    case NodeType.String:
+                        {
+                            JSON stringNode = new JSON(NodeType.String);
+                            stringNode.AsString = inReader.ReadString();
+                            return stringNode;
+                        }
+
+                    default:
+                        {
+                            JSON nullNode = new JSON(NodeType.Null);
+                            return nullNode;
+                        }
+                }
             }
         }
 
@@ -1340,11 +1663,27 @@ namespace BeauData
         }
 
         /// <summary>
+        /// Returns a new JSON object with the starting capacity.
+        /// </summary>
+        static public JSON CreateObject(int inCapacity)
+        {
+            return new JSON(NodeType.Object, inCapacity);
+        }
+
+        /// <summary>
         /// Returns a new JSON array.
         /// </summary>
         static public JSON CreateArray()
         {
             return new JSON(NodeType.Array);
+        }
+
+        /// <summary>
+        /// Returns a new JSON array with the starting capacity.
+        /// </summary>
+        static public JSON CreateArray(int inCapacity)
+        {
+            return new JSON(NodeType.Array, inCapacity);
         }
 
         /// <summary>
@@ -1469,5 +1808,17 @@ namespace BeauData
         }
 
         #endregion
+    
+        #region Errors
+
+        public sealed class ParseException : Exception
+        {
+            public ParseException(string inMessage)
+                : base(inMessage)
+                {
+                }
+        }
+
+        #endregion // Errors
     }
 }

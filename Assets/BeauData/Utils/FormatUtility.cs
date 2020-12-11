@@ -28,13 +28,14 @@ namespace BeauData
             switch (inFormat)
             {
                 case Serializer.Format.Binary:
-                    return BinarySerializer.FILE_EXTENSION;
+                    return BinarySerializer.FileExtension;
                 case Serializer.Format.GZIP:
-                    return GZIPSerializer.FILE_EXTENSION;
+                    return GZIPSerializer.FileExtension;
                 case Serializer.Format.JSON:
-                    return JSONSerializer.FILE_EXTENSION;
+                    return JSONSerializer.FileExtension;
                 case Serializer.Format.XML:
-                    return XMLSerializer.FILE_EXTENSION;
+                    return XMLSerializer.FileExtension;
+                
                 default:
                     throw new Exception("Unknown format!");
             }

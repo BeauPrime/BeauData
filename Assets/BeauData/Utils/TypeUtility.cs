@@ -18,17 +18,19 @@ namespace BeauData
     /// </summary>
     static public class TypeUtility
     {
-        static private Dictionary<long, string> s_TypeToAlias = new Dictionary<long, string>();
-        static private Dictionary<string, Type> s_AliasToType = new Dictionary<string, Type>();
-        static private Dictionary<long, ConstructorInfo> s_ConstructorsSystem = new Dictionary<long, ConstructorInfo>();
-        static private Dictionary<long, Delegate> s_TypeSerializers = new Dictionary<long, Delegate>();
+        static private readonly Dictionary<long, string> s_TypeToAlias = new Dictionary<long, string>();
+        static private readonly Dictionary<string, Type> s_AliasToType = new Dictionary<string, Type>();
+        static private readonly Dictionary<string, Type> s_RenamedTypes = new Dictionary<string, Type>();
+
+        static private readonly Dictionary<long, ConstructorInfo> s_ConstructorsSystem = new Dictionary<long, ConstructorInfo>();
+        static private readonly Dictionary<long, Delegate> s_TypeSerializers = new Dictionary<long, Delegate>();
 
         public delegate void TypeSerializerDelegate<T>(ref T ioObject, Serializer ioSerializer);
 
         static internal Type NameToType(string inName)
         {
             Type type;
-            if (!s_AliasToType.TryGetValue(inName, out type))
+            if (!s_AliasToType.TryGetValue(inName, out type) && !s_RenamedTypes.TryGetValue(inName, out type))
                 type = Type.GetType(inName);
             return type;
         }
@@ -68,6 +70,18 @@ namespace BeauData
             return constructor.Invoke(null);
         }
 
+        #region Alias Scanning
+
+        // static private bool s_ScanCount = false;
+        // static private readonly object s_ScanLock = new object();
+
+        // static public void ScanAssembly()
+        // {
+
+        // }
+
+        #endregion // Alias Scanning
+
         /// <summary>
         /// Registers a type alias, for use when serializing subclasses.
         /// </summary>
@@ -85,6 +99,23 @@ namespace BeauData
             Type type = typeof(T);
             s_AliasToType[inAliasName] = type;
             s_TypeToAlias[type.TypeHandle.Value.ToInt64()] = inAliasName;
+        }
+
+        /// <summary>
+        /// Registers a type rename, for use when deserializing subclasses.
+        /// </summary>
+        static public void RegisterRename(Type inType, string inRenameName)
+        {
+            s_RenamedTypes[inRenameName] = inType;
+        }
+
+        /// <summary>
+        /// Registers a type rename, for use when deserializing subclasses.
+        /// </summary>
+        static public void RegisterRename<T>(string inRenameName) where T : ISerializedObject
+        {
+            Type type = typeof(T);
+            s_RenamedTypes[inRenameName] = type;
         }
 
         /// <summary>
