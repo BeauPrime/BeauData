@@ -1,7 +1,7 @@
 # BeauData
 
-**Current Version: 0.3.0**  
-Updated 3 July 2020 | Changelog (Not yet available)
+**Current Version: 0.3.1**  
+Updated 15 May 2021 | Changelog (Not yet available)
 
 ## About
 BeauData is an object serialization and deserialization library, intended to reduce the amount of custom logic necessary to save and load objects. It supports the basic object versioning, serialization and deserialization of subclasses, and type aliasing. It can read and write to XML, JSON, binary, and gzipped binary.
@@ -252,6 +252,7 @@ Dictionary<string, T>
 | **Function** | **Description** |
 | ------------ | -------------- |
 | ``TypeUtility.RegisterAlias`` | Registers an alias for the given type. Useful if relying on subclass serialization. |
+| ``TypeUtility.RegisterRename`` | Registers a rename alias for the given type. Useful if a non-aliased type has been renamed and you want to maintain backwards compatibility. |
 | ``TypeUtility.RegisterSerializer`` | Registers a custom serialization function for the given type. |
 | ``PathUtility.CorrectPath`` | Will append the correct extension for the given format to a file path, if an extension is not already present. |
 | ``PathUtility.StreamingAssetsPath`` | Returns the given path modified to be relative to the StreamingAssets path. |
