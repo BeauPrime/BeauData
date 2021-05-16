@@ -8,6 +8,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Xml;
 
@@ -297,12 +298,12 @@ namespace BeauData.Format
         // Double
         protected override bool Read_Double(ref double ioData)
         {
-            return double.TryParse(m_Current.InnerText, out ioData);
+            return double.TryParse(m_Current.InnerText, NumberStyles.Float, CultureUtility.InvariantNumberFormat, out ioData);
         }
 
         protected override void Write_Double(ref double ioData)
         {
-            m_Current.InnerText = ioData.ToString();
+            m_Current.InnerText = ioData.ToString(CultureUtility.InvariantNumberFormat);
         }
 
         // Guid
@@ -353,12 +354,12 @@ namespace BeauData.Format
         // Single
         protected override bool Read_Single(ref float ioData)
         {
-            return float.TryParse(m_Current.InnerText, out ioData);
+            return float.TryParse(m_Current.InnerText, NumberStyles.Float, CultureUtility.InvariantNumberFormat, out ioData);
         }
 
         protected override void Write_Single(ref float ioData)
         {
-            m_Current.InnerText = ioData.ToString();
+            m_Current.InnerText = ioData.ToString(CultureUtility.InvariantNumberFormat);
         }
 
         // String

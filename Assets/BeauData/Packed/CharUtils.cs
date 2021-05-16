@@ -12,9 +12,9 @@
 // If disabled, lowercase letters will be cast to uppercase
 #define CASE_SENSITIVE
 
-#if UNITY_EDITOR || UNITY_DEVELOPMENT || DEVELOPMENT
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || DEVELOPMENT
 #define DEBUG
-#endif // UNITY_EDITOR || UNITY_DEVELOPMENT || DEVELOPMENT
+#endif // UNITY_EDITOR || DEVELOPMENT_BUILD || DEVELOPMENT
 
 using System;
 

@@ -2,7 +2,7 @@
 	"name": "com.beauprime.beaudata",
 	"displayName": "BeauData",
 	"description": "BeauData is an object serialization and deserialization library, intended to reduce the amount of custom logic necessary to save and load objects. It supports the basic object versioning, serialization and deserialization of subclasses, and type aliasing. It can read and write to XML, JSON, binary, and gzipped binary.", 
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"unity": "2018.3",
 	"author": {
 		"name" : "Autumn Beauchesne",
